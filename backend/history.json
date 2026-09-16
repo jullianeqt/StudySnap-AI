@@ -1,0 +1,151 @@
+[
+  {
+    "id": "e3b890c1-6f18-442c-ba64-97c9301247c2",
+    "title": "Biology Lecture 1",
+    "subject": "Biological Sciences",
+    "date_created": "Sep 16, 2026 - 10:33 PM",
+    "pages_processed": 1,
+    "ai_provider": "local_synthesizer",
+    "filename": "Biology Lecture 1",
+    "status": "Ready",
+    "reviewer": {
+      "subject": "Biological Sciences",
+      "lesson_title": "Biology Lecture 1",
+      "quick_review": [
+        "Comprehensive review covering foundational concepts of Biology Lecture 1.",
+        "Emphasizes key definitions, core mechanics, and operational frameworks.",
+        "Provides exam-ready comparative models and critical memorization anchors."
+      ],
+      "keywords": [
+        {
+          "term": "Photosynthesis",
+          "definition": "Core academic concept emphasized in Biology Lecture 1.",
+          "importance": "high"
+        },
+        {
+          "term": "Equation",
+          "definition": "Core academic concept emphasized in Biology Lecture 1.",
+          "importance": "high"
+        },
+        {
+          "term": "Light",
+          "definition": "Core academic concept emphasized in Biology Lecture 1.",
+          "importance": "medium"
+        },
+        {
+          "term": "Calvin",
+          "definition": "Core academic concept emphasized in Biology Lecture 1.",
+          "importance": "medium"
+        }
+      ],
+      "core_concepts": [
+        {
+          "concept": "Photosynthesis",
+          "explanation": "Photosynthesis is the process by which green plants synthesize nutrients from carbon dioxide and water. Equation: 6CO2 + 6H2O -> C6H12O6 + 6O2. Light reactions occur in thylakoids. Calvin cycle occurs in stroma.",
+          "points": [
+            "Essential property verified across all test scenarios."
+          ]
+        }
+      ],
+      "must_remember": [
+        "Master the exact definition and constraints of 'Photosynthesis'.",
+        "Be prepared to distinguish subtle operational differences between primary and secondary methods.",
+        "Verify edge cases and boundary conditions when answering problem-solving items.",
+        "Ensure accurate identification of sequential steps without skipping verification stages."
+      ],
+      "compare": [
+        {
+          "concept_a": "Photosynthesis",
+          "concept_b": "Equation",
+          "aspects": [
+            {
+              "aspect": "Primary Purpose",
+              "a_val": "Specialized for baseline Photosynthesis handling",
+              "b_val": "Optimized for high-yield Equation scenarios"
+            },
+            {
+              "aspect": "Core Characteristic",
+              "a_val": "Direct, structured, deterministic",
+              "b_val": "Adaptive, scalable, modular"
+            },
+            {
+              "aspect": "Common Exam Pitfall",
+              "a_val": "Confusing initialization with steady state",
+              "b_val": "Overlooking boundary requirements"
+            }
+          ]
+        }
+      ],
+      "process_steps": [
+        {
+          "process_title": "Operational Workflow in Biology Lecture 1",
+          "steps": [
+            {
+              "step_number": 1,
+              "title": "Initialization & Input",
+              "description": "Identify parameters, baseline state, and input requirements."
+            },
+            {
+              "step_number": 2,
+              "title": "Core Processing",
+              "description": "Apply standard rules, transformations, or governing mechanisms."
+            },
+            {
+              "step_number": 3,
+              "title": "Validation & Verification",
+              "description": "Cross-check outcomes against constraints and expected metrics."
+            },
+            {
+              "step_number": 4,
+              "title": "Output & Conclusion",
+              "description": "Derive the final solution or synthesized outcome."
+            }
+          ]
+        }
+      ],
+      "formulas_rules": [
+        {
+          "name": "Fundamental Rule of Biology Lecture 1",
+          "formula": "Output = Mechanism(Input, Constraints)",
+          "variables": [
+            {
+              "symbol": "Input",
+              "meaning": "Primary data or stimulus"
+            },
+            {
+              "symbol": "Mechanism",
+              "meaning": "Underlying algorithm or natural law"
+            }
+          ],
+          "when_to_use": "Use when evaluating system behavior under fixed boundary conditions.",
+          "example": "Standard input parameters produce deterministic outputs."
+        }
+      ],
+      "examples": [
+        {
+          "concept": "Photosynthesis",
+          "example": "Applying Photosynthesis to solve a standard exam problem set.",
+          "explanation": "Illustrates how theoretical principles translate into direct practical results."
+        }
+      ],
+      "possible_quiz_points": [
+        {
+          "question_clue": "What is the defining characteristic of Photosynthesis?",
+          "key_fact": "Core academic concept emphasized in Biology Lecture 1.",
+          "question_type": "multiple_choice"
+        },
+        {
+          "question_clue": "True or False: The primary execution flow requires validation before output.",
+          "key_fact": "True. Validation ensures data integrity before concluding the process.",
+          "question_type": "true_false"
+        },
+        {
+          "question_clue": "Identify the governing mechanism utilized in Biology Lecture 1.",
+          "key_fact": "Equation",
+          "question_type": "identification"
+        }
+      ],
+      "one_minute_review": "Summary: Biology Lecture 1 is built around Photosynthesis, Equation, Light. Remember the step-by-step workflow: Initialization -> Processing -> Verification -> Output. Prioritize clear definitions and note the contrast between primary mechanisms."
+    }
+  }
+]
