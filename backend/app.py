@@ -2,8 +2,24 @@ import os
 import json
 import uuid
 import datetime
+from io import BytesIO
 from flask import Flask, request, jsonify
+from flask import send_file
 from flask_cors import CORS
+from dotenv import load_dotenv
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import mm
+from reportlab.platypus import (
+    KeepTogether,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
+)
 from extractors import process_file_input, extract_from_text
 from ai_engine import (
     generate_reviewer_gemini,
@@ -12,10 +28,13 @@ from ai_engine import (
     local_fallback_quiz_generator
 )
 
+load_dotenv()
+
 app = Flask(__name__)
-# Enable CORS for frontend Vite dev server and production
+# Enable CORS for local dev and deployed frontend domains
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
+PORT = int(os.environ.get("PORT", "5001"))
 HISTORY_FILE = os.path.join(os.path.dirname(__file__), "history.json")
 
 def load_history():
@@ -34,6 +53,172 @@ def save_history(history_list):
     except Exception as e:
         app.logger.error(f"Error saving history: {e}")
 
+
+def _pdf_text(value):
+    """Convert reviewer values to safe, readable PDF text."""
+    return str(value or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def _pdf_paragraph(value, style):
+    return Paragraph(_pdf_text(value).replace("\n", "<br/>"), style)
+
+
+def _pdf_rich_paragraph(value, style):
+    """Render trusted ReportLab markup with dynamic values already escaped."""
+    return Paragraph(value.replace("\n", "<br/>"), style)
+
+
+def build_reviewer_pdf(record):
+    """Render the complete reviewer record as one detailed, paginated PDF."""
+    data = record.get("reviewer", record)
+    title = data.get("lesson_title") or record.get("title") or "Study Reviewer"
+    subject = data.get("subject") or record.get("subject") or "Academic Study Reviewer"
+
+    buffer = BytesIO()
+    document = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=16 * mm,
+        leftMargin=16 * mm,
+        topMargin=16 * mm,
+        bottomMargin=16 * mm,
+        title=title,
+        author="StudySnap AI",
+    )
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle(
+        name="PdfTitle", parent=styles["Title"], fontSize=22, leading=27,
+        textColor=colors.HexColor("#172554"), alignment=TA_CENTER, spaceAfter=6,
+    ))
+    styles.add(ParagraphStyle(
+        name="PdfSubtitle", parent=styles["Normal"], fontSize=9, leading=12,
+        textColor=colors.HexColor("#475569"), alignment=TA_CENTER, spaceAfter=16,
+    ))
+    styles.add(ParagraphStyle(
+        name="PdfSection", parent=styles["Heading2"], fontSize=14, leading=18,
+        textColor=colors.HexColor("#1e3a8a"), spaceBefore=14, spaceAfter=7,
+    ))
+    styles.add(ParagraphStyle(
+        name="PdfHeading", parent=styles["Heading3"], fontSize=10.5, leading=14,
+        textColor=colors.HexColor("#0f172a"), spaceBefore=5, spaceAfter=3,
+    ))
+    styles.add(ParagraphStyle(
+        name="PdfBody", parent=styles["BodyText"], fontSize=9.5, leading=13,
+        textColor=colors.HexColor("#334155"), spaceAfter=4,
+    ))
+    styles.add(ParagraphStyle(
+        name="PdfBullet", parent=styles["PdfBody"], leftIndent=12, firstLineIndent=-8,
+    ))
+    styles.add(ParagraphStyle(
+        name="PdfSmall", parent=styles["PdfBody"], fontSize=8, leading=10,
+        textColor=colors.HexColor("#64748b"),
+    ))
+
+    story = [
+        _pdf_paragraph(title, styles["PdfTitle"]),
+        _pdf_paragraph(
+            f"{subject} | {record.get('date_created', '')} | "
+            f"{record.get('pages_processed', 1)} page(s)/slide(s) | StudySnap AI",
+            styles["PdfSubtitle"],
+        ),
+    ]
+
+    def section(number, heading):
+        story.append(_pdf_paragraph(f"{number}. {heading}", styles["PdfSection"]))
+
+    def bullet_list(items):
+        for item in items or []:
+            story.append(_pdf_paragraph(f"• {item}", styles["PdfBullet"]))
+
+    section(1, "Quick Review")
+    bullet_list(data.get("quick_review"))
+
+    section(2, "Keywords & Definitions")
+    keyword_rows = [[_pdf_paragraph("Term", styles["PdfHeading"]), _pdf_paragraph("Definition", styles["PdfHeading"])]]
+    for item in data.get("keywords", []):
+        keyword_rows.append([_pdf_paragraph(item.get("term"), styles["PdfBody"]), _pdf_paragraph(item.get("definition"), styles["PdfBody"])])
+    if len(keyword_rows) > 1:
+        table = Table(keyword_rows, colWidths=[48 * mm, 126 * mm], repeatRows=1)
+        table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#e0e7ff")),
+            ("GRID", (0, 0), (-1, -1), 0.35, colors.HexColor("#cbd5e1")),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 7), ("RIGHTPADDING", (0, 0), (-1, -1), 7),
+            ("TOPPADDING", (0, 0), (-1, -1), 6), ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ]))
+        story.append(table)
+
+    section(3, "Core Concepts")
+    for item in data.get("core_concepts", []):
+        story.append(_pdf_paragraph(item.get("concept"), styles["PdfHeading"]))
+        story.append(_pdf_paragraph(item.get("explanation"), styles["PdfBody"]))
+        bullet_list(item.get("points"))
+
+    section(4, "Must Remember")
+    bullet_list(data.get("must_remember"))
+
+    comparisons = data.get("compare", [])
+    if comparisons:
+        section(5, "Compare Similar Concepts")
+        for item in comparisons:
+            story.append(_pdf_paragraph(f"{item.get('concept_a')} vs {item.get('concept_b')}", styles["PdfHeading"]))
+            rows = [["Aspect", item.get("concept_a", "A"), item.get("concept_b", "B")]]
+            rows.extend([[aspect.get("aspect", ""), aspect.get("a_val", ""), aspect.get("b_val", "")] for aspect in item.get("aspects", [])])
+            table = Table([[ _pdf_paragraph(cell, styles["PdfBody"]) for cell in row] for row in rows], colWidths=[42 * mm, 66 * mm, 66 * mm], repeatRows=1)
+            table.setStyle(TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#dbeafe")),
+                ("GRID", (0, 0), (-1, -1), 0.35, colors.HexColor("#cbd5e1")),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("LEFTPADDING", (0, 0), (-1, -1), 6), ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+                ("TOPPADDING", (0, 0), (-1, -1), 5), ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+            ]))
+            story.append(table)
+
+    processes = data.get("process_steps", [])
+    if processes:
+        section(6, "Process / Steps")
+        for process in processes:
+            story.append(_pdf_paragraph(process.get("process_title"), styles["PdfHeading"]))
+            for step in process.get("steps", []):
+                story.append(_pdf_rich_paragraph(
+                    f"{_pdf_text(step.get('step_number'))}. <b>{_pdf_text(step.get('title'))}</b>: "
+                    f"{_pdf_text(step.get('description'))}",
+                    styles["PdfBody"],
+                ))
+
+    formulas = data.get("formulas_rules", [])
+    if formulas:
+        section(7, "Formulas & Rules")
+        for formula in formulas:
+            story.append(_pdf_paragraph(formula.get("name"), styles["PdfHeading"]))
+            story.append(_pdf_rich_paragraph(f"<b>Formula:</b> {_pdf_text(formula.get('formula'))}", styles["PdfBody"]))
+            story.append(_pdf_rich_paragraph(f"<b>When to use:</b> {_pdf_text(formula.get('when_to_use'))}", styles["PdfBody"]))
+            if formula.get("variables"):
+                bullet_list([f"{item.get('symbol')}: {item.get('meaning')}" for item in formula["variables"]])
+            if formula.get("example"):
+                story.append(_pdf_rich_paragraph(f"<b>Example:</b> {_pdf_text(formula.get('example'))}", styles["PdfBody"]))
+
+    examples = data.get("examples", [])
+    if examples:
+        section(8, "High-Yield Examples")
+        for item in examples:
+            story.append(_pdf_paragraph(item.get("concept"), styles["PdfHeading"]))
+            story.append(_pdf_rich_paragraph(f"<b>Scenario:</b> {_pdf_text(item.get('example'))}", styles["PdfBody"]))
+            story.append(_pdf_rich_paragraph(f"<b>Why it matters:</b> {_pdf_text(item.get('explanation'))}", styles["PdfBody"]))
+
+    quiz_points = data.get("possible_quiz_points", [])
+    if quiz_points:
+        section(9, "Possible Quiz Points")
+        for item in quiz_points:
+            story.append(_pdf_rich_paragraph(f"<b>Clue:</b> {_pdf_text(item.get('question_clue'))}", styles["PdfBody"]))
+            story.append(_pdf_rich_paragraph(f"<b>Key fact:</b> {_pdf_text(item.get('key_fact'))}", styles["PdfBody"]))
+
+    section(10, "One-Minute Review")
+    story.append(_pdf_paragraph(data.get("one_minute_review"), styles["PdfBody"]))
+    document.build(story)
+    buffer.seek(0)
+    return buffer
+
 @app.route("/api/health", methods=["GET"])
 def health():
     gemini_env_key = bool(os.environ.get("GEMINI_API_KEY"))
@@ -41,9 +226,31 @@ def health():
         "status": "healthy",
         "app": "StudySnap AI Backend",
         "has_env_gemini_key": gemini_env_key,
-        "default_model": "gemini-3.8-flash",
+        "default_model": "gemini-3.6-flash",
         "timestamp": datetime.datetime.now().isoformat()
     })
+
+
+@app.route("/api/export-pdf", methods=["POST"])
+def export_pdf():
+    """Export the complete reviewer record as a single downloadable PDF."""
+    record = request.get_json() or {}
+    if not record.get("reviewer"):
+        return jsonify({"error": "A reviewer is required to create a PDF."}), 400
+
+    try:
+        pdf_buffer = build_reviewer_pdf(record)
+        title = record.get("reviewer", {}).get("lesson_title") or record.get("title") or "study-reviewer"
+        safe_title = "".join(char if char.isalnum() or char in " -_" else "_" for char in title).strip() or "study-reviewer"
+        return send_file(
+            pdf_buffer,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name=f"{safe_title}.pdf",
+        )
+    except Exception as error:
+        app.logger.exception("PDF export failed")
+        return jsonify({"error": f"Could not create PDF: {error}"}), 500
 
 @app.route("/api/extract", methods=["POST"])
 def extract_file():
@@ -95,7 +302,7 @@ def generate_reviewer():
                 tone=tone,
                 api_key=api_key
             )
-            ai_provider = "gemini-3.8-flash"
+            ai_provider = "gemini-3.6-flash"
         except Exception as e:
             app.logger.warning(f"Gemini generation failed: {e}. Falling back to local smart synthesizer.")
             reviewer_result = local_fallback_synthesizer(
@@ -244,4 +451,4 @@ def history_endpoint():
     return jsonify({"success": True, "history": history})
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    app.run(host="0.0.0.0", port=PORT, debug=False)

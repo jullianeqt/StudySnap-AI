@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import {
-  Copy, Printer, HelpCircle, Sparkles, Wand2,
+  Copy, Download, HelpCircle, Sparkles, Wand2,
   Search, Star, Check, ArrowRight, Zap
 } from 'lucide-react';
 import type { ReviewerRecord, ReviewerData } from '../types/reviewer';
@@ -13,6 +13,7 @@ interface ReviewerProps {
   record: ReviewerRecord;
   onOpenQuizGenerator: () => void;
   onTransform: (action: 'make_simpler' | 'eli5' | 'make_shorter' | 'make_detailed') => void;
+  onExportPdf: () => Promise<void>;
   isTransforming?: boolean;
   onSelectCompression: (level: 'quick' | 'standard' | 'detailed') => void;
   targetSearchTopic?: string;
@@ -22,6 +23,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
   record,
   onOpenQuizGenerator,
   onTransform,
+  onExportPdf,
   isTransforming = false,
   onSelectCompression,
   targetSearchTopic = '',
@@ -29,6 +31,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
   const [searchQuery, setSearchQuery] = useState(targetSearchTopic);
   const [copied, setCopied] = useState(false);
   const [starredTerms, setStarredTerms] = useState<Set<string>>(new Set());
+  const [isExporting, setIsExporting] = useState(false);
 
   const data: ReviewerData = record.reviewer;
 
@@ -81,9 +84,15 @@ export const Reviewer: React.FC<ReviewerProps> = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Print as PDF
-  const handlePrintPdf = () => {
-    window.print();
+  const handleExportPdf = async () => {
+    setIsExporting(true);
+    try {
+      await onExportPdf();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to export reviewer as PDF.');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   // Filtered keywords based on search
@@ -193,11 +202,12 @@ export const Reviewer: React.FC<ReviewerProps> = ({
             </button>
             <button
               type="button"
-              onClick={handlePrintPdf}
-              className="p-2 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-xl transition-colors"
-              title="Download as PDF / Print"
+              onClick={handleExportPdf}
+              disabled={isExporting}
+              className="p-2 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-xl transition-colors disabled:opacity-50"
+              title="Download detailed PDF"
             >
-              <Printer className="w-4 h-4" />
+              <Download className={`w-4 h-4 ${isExporting ? 'animate-pulse' : ''}`} />
             </button>
           </div>
         </div>

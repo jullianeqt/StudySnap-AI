@@ -4,8 +4,10 @@ import json
 import logging
 import base64
 from typing import Dict, Any, List, Optional
+from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
+load_dotenv()
 
 REVIEWER_SYSTEM_PROMPT = """You are StudySnap AI, an elite academic learning assistant designed for college and high-school students.
 Your mission is to transform lecture materials (PDFs, PPT slides, textbook notes, and diagrams) into a HIGH-YIELD, EXAM-FOCUSED STUDY REVIEWER.
@@ -100,7 +102,7 @@ def generate_reviewer_gemini(
     tone: str = "standard",
     api_key: Optional[str] = None
 ) -> Dict[str, Any]:
-    """Call Google Gemini 3.8 Flash using google-genai SDK."""
+    """Call Google Gemini Flash using google-genai SDK."""
     from google import genai
     from google.genai import types
 
@@ -110,10 +112,15 @@ def generate_reviewer_gemini(
 
     client = genai.Client(api_key=resolved_key)
 
+    compression = compression if compression in {"quick", "standard", "detailed"} else "standard"
+    tone = tone if tone in {"standard", "simpler", "eli5"} else "standard"
+
     user_instructions = f"""Please analyze this learning material and construct the Study Reviewer.
 Settings:
 - Compression Level: {compression} (quick / standard / detailed)
 - Explanation Tone: {tone} (standard / simpler / eli5)
+
+Apply both settings to every section. For quick, keep only the most important items and use compact explanations. For standard, provide balanced coverage. For detailed, include additional relevant points, context, examples, variables, and quiz clues without inventing facts. For simpler, use plain vocabulary and explain technical terms briefly. For eli5, add intuitive beginner-friendly analogies while preserving correct technical terms. Do not default to standard if a different setting is selected.
 
 Source Material:
 {text}
@@ -130,9 +137,9 @@ Source Material:
         )
     contents.append(user_instructions)
 
-    # Use gemini-3.8-flash (or gemini-flash-latest)
+    # Use a currently available Gemini Flash model.
     response = client.models.generate_content(
-        model="gemini-3.8-flash",
+        model="gemini-3.6-flash",
         contents=contents,
         config=types.GenerateContentConfig(
             system_instruction=REVIEWER_SYSTEM_PROMPT,
@@ -156,7 +163,7 @@ def generate_quiz_gemini(
     question_type: str = "mixed",
     api_key: Optional[str] = None
 ) -> List[Dict[str, Any]]:
-    """Generate quiz questions from reviewer data using Gemini 3.8 Flash."""
+    """Generate quiz questions from reviewer data using Gemini Flash."""
     from google import genai
     from google.genai import types
 
@@ -193,7 +200,7 @@ Reviewer Data:
 """
 
     response = client.models.generate_content(
-        model="gemini-3.8-flash",
+        model="gemini-3.6-flash",
         contents=prompt,
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
@@ -219,6 +226,8 @@ def local_fallback_synthesizer(
     Parses definitions, bullet points, steps, formulas, and comparisons from text
     when Gemini API is not available or offline.
     """
+    compression = compression if compression in {"quick", "standard", "detailed"} else "standard"
+    tone = tone if tone in {"standard", "simpler", "eli5"} else "standard"
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     if not lines:
         lines = ["No text content found in uploaded document."]
@@ -420,7 +429,50 @@ def local_fallback_synthesizer(
         }
     ]
 
+    # Make the offline engine honor the same length and tone choices as Gemini.
+    if compression == "quick":
+        quick_review = quick_review[:3]
+        keywords = keywords[:5]
+        core_concepts = core_concepts[:3]
+        must_remember = must_remember[:3]
+        compare[0]["aspects"] = compare[0]["aspects"][:2]
+        process_steps[0]["steps"] = process_steps[0]["steps"][:3]
+        formulas_rules = formulas_rules[:1]
+        examples = examples[:1]
+        possible_quiz_points = possible_quiz_points[:2]
+    elif compression == "detailed":
+        quick_review = quick_review[:7]
+        keywords = keywords[:8]
+        core_concepts = core_concepts[:6]
+        must_remember = must_remember[:5]
+        compare[0]["aspects"].append({
+            "aspect": "Study Focus",
+            "a_val": f"Review the definition and constraints of {concept_a}",
+            "b_val": f"Review the use cases and limitations of {concept_b}",
+        })
+        process_steps[0]["steps"] = process_steps[0]["steps"][:6]
+        formulas_rules = formulas_rules[:3]
+        examples = examples[:3]
+        possible_quiz_points = possible_quiz_points[:5]
+
     one_minute = f"Summary: {title} is built around {', '.join(k_names[:3]) if k_names else 'core academic pillars'}. Remember the step-by-step workflow: Initialization -> Processing -> Verification -> Output. Prioritize clear definitions and note the contrast between primary mechanisms."
+    if compression == "quick":
+        one_minute = f"{title}: remember {', '.join(k_names[:2]) if k_names else 'the core idea'} and the flow Input -> Processing -> Output."
+    elif compression == "detailed":
+        one_minute += " Connect each definition to its process, formula, example, and likely exam question."
+
+    if tone == "simpler":
+        for item in keywords:
+            item["definition"] = f"In simple terms: {item['definition']}"
+        for item in core_concepts:
+            item["explanation"] = f"In simple terms: {item['explanation']}"
+        one_minute = f"In simple terms: {one_minute}"
+    elif tone == "eli5":
+        for item in core_concepts:
+            item["explanation"] = f"Think of it this way: {item['explanation']}"
+        for item in examples:
+            item["explanation"] = f"A beginner-friendly way to see it: {item['explanation']}"
+        one_minute = f"Imagine this: {one_minute}"
 
     return {
         "subject": subject,

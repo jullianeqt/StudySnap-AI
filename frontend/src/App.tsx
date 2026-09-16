@@ -12,6 +12,11 @@ import { ReviewerHistory } from './components/ReviewerHistory';
 import { ApiKeyModal } from './components/ApiKeyModal';
 import type { ReviewerRecord, QuizQuestion, QuizConfig } from './types/reviewer';
 
+const getApiUrl = (path: string) => {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '');
+  return `${baseUrl || ''}${path}`;
+};
+
 export function App() {
   const [activeInputTab, setActiveInputTab] = useState<'upload' | 'text'>('upload');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -48,7 +53,7 @@ export function App() {
 
   const fetchHistory = async () => {
     try {
-      const res = await fetch('/api/history');
+      const res = await fetch(getApiUrl('/api/history'));
       if (res.ok) {
         const data = await res.json();
         if (data.history) {
@@ -70,7 +75,10 @@ export function App() {
   };
 
   // Main submission handler
-  const handleGenerate = async () => {
+  const handleGenerate = async (
+    requestedCompression = compression,
+    requestedTone = tone,
+  ) => {
     setErrorMsg(null);
     setIsProcessing(true);
 
@@ -87,7 +95,7 @@ export function App() {
         const formData = new FormData();
         formData.append('file', selectedFile);
 
-        const extractRes = await fetch('/api/extract', {
+        const extractRes = await fetch(getApiUrl('/api/extract'), {
           method: 'POST',
           body: formData,
         });
@@ -116,7 +124,7 @@ export function App() {
         headers['X-Gemini-Key'] = apiKey;
       }
 
-      const generateRes = await fetch('/api/generate-reviewer', {
+      const generateRes = await fetch(getApiUrl('/api/generate-reviewer'), {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -124,8 +132,8 @@ export function App() {
           image_b64: imageB64,
           mime_type: mimeType,
           filename: filename,
-          compression: compression,
-          tone: tone,
+          compression: requestedCompression,
+          tone: requestedTone,
           page_count: pageCount,
         }),
       });
@@ -167,7 +175,7 @@ export function App() {
         headers['X-Gemini-Key'] = apiKey;
       }
 
-      const res = await fetch('/api/generate-quiz', {
+      const res = await fetch(getApiUrl('/api/generate-quiz'), {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -199,7 +207,7 @@ export function App() {
     if (!currentReviewer) return;
 
     try {
-      const res = await fetch('/api/transform', {
+      const res = await fetch(getApiUrl('/api/transform'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -222,10 +230,37 @@ export function App() {
     }
   };
 
+  const handleExportPdf = async () => {
+    if (!currentReviewer) return;
+
+    const response = await fetch(getApiUrl('/api/export-pdf'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(currentReviewer),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to export reviewer as PDF.');
+    }
+
+    const blob = await response.blob();
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = `${currentReviewer.reviewer.lesson_title || currentReviewer.title || 'study-reviewer'}`
+      .replace(/[^a-z0-9 -_]/gi, '_')
+      .trim() + '.pdf';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(downloadUrl);
+  };
+
   const handleClearHistory = async () => {
     if (confirm('Clear all saved reviewer history?')) {
       try {
-        await fetch('/api/history', { method: 'DELETE' });
+        await fetch(getApiUrl('/api/history'), { method: 'DELETE' });
         setHistoryList([]);
       } catch (e) {
         console.error(e);
@@ -394,7 +429,7 @@ export function App() {
             <button
               type="button"
               disabled={isProcessing || (activeInputTab === 'upload' && !selectedFile && !pastedText) || (activeInputTab === 'text' && !pastedText.trim())}
-              onClick={handleGenerate}
+              onClick={() => handleGenerate()}
               className="px-7 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center space-x-2 disabled:opacity-40 disabled:pointer-events-none"
             >
               <Zap className="w-4 h-4 fill-current" />
@@ -422,9 +457,10 @@ export function App() {
             record={currentReviewer}
             onOpenQuizGenerator={() => setIsQuizGenOpen(true)}
             onTransform={handleTransform}
+            onExportPdf={handleExportPdf}
             onSelectCompression={(newLevel) => {
               setCompression(newLevel);
-              handleGenerate();
+              handleGenerate(newLevel, tone);
             }}
             targetSearchTopic={targetSearchTopic}
           />
