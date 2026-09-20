@@ -2,6 +2,7 @@ import os
 import io
 import base64
 import logging
+import unicodedata
 from typing import Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
@@ -121,7 +122,7 @@ def extract_from_image(file_stream: io.BytesIO, filename: str) -> Dict[str, Any]
 
 def extract_from_text(text: str, filename: str = "Pasted Text") -> Dict[str, Any]:
     """Format and normalize plain text or markdown lesson input."""
-    clean_text = text.strip()
+    clean_text = unicodedata.normalize("NFC", text).strip()
     words = len(clean_text.split())
     # Estimate pages (approx 400 words per page)
     est_pages = max(1, round(words / 400))
@@ -147,13 +148,43 @@ def process_file_input(file_obj, filename: str) -> Dict[str, Any]:
         return extract_from_image(stream, filename)
     elif ext in [".txt", ".md", ".csv"]:
         stream.seek(0)
-        content = stream.read().decode("utf-8", errors="ignore")
+        content = decode_text_bytes(stream.read(), filename)
         return extract_from_text(content, filename)
     else:
         # Try reading as text
         stream.seek(0)
         try:
-            content = stream.read().decode("utf-8")
+            content = decode_text_bytes(stream.read(), filename)
             return extract_from_text(content, filename)
         except Exception:
             raise ValueError(f"Unsupported file format: {ext}. Please upload a PDF, PPTX, image, or text file.")
+
+
+def decode_text_bytes(file_bytes: bytes, filename: str = "uploaded file") -> str:
+    """Decode common text encodings without silently discarding source characters."""
+    if file_bytes.startswith((b"\xff\xfe", b"\xfe\xff")):
+        return file_bytes.decode("utf-16")
+    if file_bytes.startswith(b"\xef\xbb\xbf"):
+        return file_bytes.decode("utf-8-sig")
+
+    for encoding in ("utf-8", "cp1252"):
+        try:
+            decoded = file_bytes.decode(encoding)
+            if encoding == "cp1252" and b"\x00" not in file_bytes:
+                return decoded
+            if encoding == "utf-8":
+                return decoded
+        except UnicodeDecodeError:
+            continue
+
+    for encoding in ("utf-16-le", "utf-16-be"):
+        try:
+            decoded = file_bytes.decode(encoding)
+            if b"\x00" in file_bytes:
+                return decoded.replace("\x00", "")
+        except UnicodeDecodeError:
+            continue
+
+    raise ValueError(
+        f"Could not decode {filename}. Save it as UTF-8, UTF-16, or Windows-1252 and try again."
+    )
