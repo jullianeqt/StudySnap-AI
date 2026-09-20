@@ -250,7 +250,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
       </div>
 
       {/* Reviewer Header Card */}
-      <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-xs reviewer-card print-page-break">
+      <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '0ms' } as React.CSSProperties}>
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
           <span className="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
             {data.subject || "Academic Study Reviewer"}
@@ -283,7 +283,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
       </div>
 
       {/* SECTION 1: QUICK REVIEW */}
-      <section id="quick-review" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break">
+      <section id="quick-review" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '70ms' } as React.CSSProperties}>
         <div className="flex items-center space-x-2.5 mb-4 pb-2 border-b border-slate-100">
           <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs">
             1
@@ -307,7 +307,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
       </section>
 
       {/* SECTION 2: KEYWORDS */}
-      <section id="keywords" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break">
+      <section id="keywords" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '140ms' } as React.CSSProperties}>
         <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
           <div className="flex items-center space-x-2.5">
             <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">
@@ -335,7 +335,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
       </section>
 
       {/* SECTION 3: CORE CONCEPTS */}
-      <section id="concepts" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break">
+      <section id="concepts" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '210ms' } as React.CSSProperties}>
         <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
           <div className="flex items-center space-x-2.5">
             <div className="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-xs">
@@ -356,7 +356,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
       </section>
 
       {/* SECTION 4: MUST REMEMBER */}
-      <section id="must-remember" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break">
+      <section id="must-remember" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '280ms' } as React.CSSProperties}>
         <div className="flex items-center space-x-2.5 mb-4 pb-2 border-b border-slate-100">
           <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-xs">
             4
@@ -386,7 +386,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
 
       {/* SECTION 5: COMPARE */}
       {data.compare && data.compare.length > 0 && (
-        <section id="compare" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break">
+        <section id="compare" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '350ms' } as React.CSSProperties}>
           <div className="flex items-center space-x-2.5 mb-4 pb-2 border-b border-slate-100">
             <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xs">
               5
@@ -402,7 +402,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
 
       {/* SECTION 6: PROCESS / STEPS */}
       {data.process_steps && data.process_steps.length > 0 && (
-        <section id="steps" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break">
+        <section id="steps" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '420ms' } as React.CSSProperties}>
           <div className="flex items-center space-x-2.5 mb-4 pb-2 border-b border-slate-100">
             <div className="w-7 h-7 rounded-lg bg-cyan-50 text-cyan-600 flex items-center justify-center font-bold text-xs">
               6
@@ -447,7 +447,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
 
       {/* SECTION 7: FORMULAS / RULES */}
       {data.formulas_rules && data.formulas_rules.length > 0 && (
-        <section id="formulas" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break">
+        <section id="formulas" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '490ms' } as React.CSSProperties}>
           <div className="flex items-center space-x-2.5 mb-4 pb-2 border-b border-slate-100">
             <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xs">
               7
@@ -467,7 +467,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
 
       {/* SECTION 8: EXAMPLES */}
       {data.examples && data.examples.length > 0 && (
-        <section id="examples" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break">
+        <section id="examples" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '560ms' } as React.CSSProperties}>
           <div className="flex items-center space-x-2.5 mb-4 pb-2 border-b border-slate-100">
             <div className="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-xs">
               8
@@ -501,7 +501,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
 
       {/* SECTION 9: POSSIBLE QUIZ POINTS */}
       {data.possible_quiz_points && data.possible_quiz_points.length > 0 && (
-        <section id="quiz-points" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break">
+        <section id="quiz-points" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '630ms' } as React.CSSProperties}>
           <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
             <div className="flex items-center space-x-2.5">
               <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">
@@ -542,7 +542,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
       )}
 
       {/* SECTION 10: ONE-MINUTE REVIEW */}
-      <section id="one-minute" className="bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-3xl p-8 shadow-lg reviewer-card print-page-break">
+      <section id="one-minute" className="bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-3xl p-8 shadow-lg reviewer-card print-page-break reveal-section" style={{ '--section-delay': '700ms' } as React.CSSProperties}>
         <div className="flex items-center justify-between mb-4 pb-3 border-b border-indigo-700/50">
           <div className="flex items-center space-x-2.5">
             <div className="w-7 h-7 rounded-lg bg-indigo-500/30 text-indigo-300 flex items-center justify-center font-bold text-xs">

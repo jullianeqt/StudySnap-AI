@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-  Sparkles, History, Key, FileText, Upload, Sliders, Shield, Zap, AlertCircle
+  Sparkles, History, Key, FileText, Upload, Sliders, Shield, Zap, AlertCircle, Moon, Sun
 } from 'lucide-react';
 import { FileUploader } from './components/FileUploader';
 import { TextInput } from './components/TextInput';
@@ -18,6 +18,9 @@ const getApiUrl = (path: string) => {
 };
 
 export function App() {
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => (
+    localStorage.getItem('studysnap_theme') === 'dark' ? 'dark' : 'light'
+  ));
   const [activeInputTab, setActiveInputTab] = useState<'upload' | 'text'>('upload');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [pastedText, setPastedText] = useState<string>('');
@@ -50,6 +53,11 @@ export function App() {
   useEffect(() => {
     fetchHistory();
   }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem('studysnap_theme', theme);
+  }, [theme]);
 
   const fetchHistory = async () => {
     try {
@@ -269,7 +277,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col selection:bg-indigo-500/20">
+    <div className={`min-h-screen bg-slate-50 text-slate-900 flex flex-col selection:bg-indigo-500/20 ${theme === 'dark' ? 'theme-dark' : ''}`}>
       {/* Top Navigation */}
       <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-8 py-3.5 no-print">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
@@ -284,6 +292,15 @@ export function App() {
           </div>
 
           <div className="flex items-center space-x-2">
+            <button
+              type="button"
+              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+              className="p-2 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-xl transition-colors"
+              title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+              aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+            >
+              {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+            </button>
             <button
               type="button"
               onClick={() => setIsHistoryOpen(true)}

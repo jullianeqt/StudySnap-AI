@@ -7,6 +7,47 @@
   }
 }
 
+html,
+body {
+  transition: background-color 220ms ease, color 220ms ease;
+}
+
+.reveal-section {
+  animation: section-reveal 560ms cubic-bezier(.22, 1, .36, 1) both;
+  animation-delay: var(--section-delay, 0ms);
+}
+
+@keyframes section-reveal {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+html[data-theme='dark'] body {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.theme-dark .bg-white { background-color: #1e293b; }
+.theme-dark .bg-slate-50, .theme-dark .bg-slate-100 { background-color: #172033; }
+.theme-dark .bg-slate-50\/40, .theme-dark .bg-slate-50\/50 { background-color: rgba(30, 41, 59, .55); }
+.theme-dark .border-slate-100, .theme-dark .border-slate-200, .theme-dark .border-slate-200\/80 { border-color: #334155; }
+.theme-dark .text-slate-900, .theme-dark .text-slate-800 { color: #f1f5f9; }
+.theme-dark .text-slate-700, .theme-dark .text-slate-600 { color: #cbd5e1; }
+.theme-dark .text-slate-500, .theme-dark .text-slate-400 { color: #94a3b8; }
+.theme-dark .hover\:bg-slate-100:hover { background-color: #334155; }
+.theme-dark input, .theme-dark textarea { color: #f1f5f9; background-color: #172033; border-color: #475569; }
+.theme-dark input:focus, .theme-dark textarea:focus { background-color: #1e293b; }
+.theme-dark .shadow-sm, .theme-dark .shadow-xs { box-shadow: 0 8px 24px rgba(2, 6, 23, .28); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+  }
+}
+
 /* Print Stylesheet for clean A4/Letter Study Reviewer Exports */
 @media print {
   body {
