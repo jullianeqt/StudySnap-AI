@@ -137,9 +137,9 @@ Source Material:
         )
     contents.append(user_instructions)
 
-    # Use a currently available Gemini Flash model.
+    # Use a generally available model alias so configured API keys work.
     response = client.models.generate_content(
-        model="gemini-3.6-flash",
+        model="gemini-2.5-flash",
         contents=contents,
         config=types.GenerateContentConfig(
             system_instruction=REVIEWER_SYSTEM_PROMPT,
@@ -200,7 +200,7 @@ Reviewer Data:
 """
 
     response = client.models.generate_content(
-        model="gemini-3.6-flash",
+        model="gemini-2.5-flash",
         contents=prompt,
         config=types.GenerateContentConfig(
             response_mime_type="application/json",

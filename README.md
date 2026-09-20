@@ -75,7 +75,7 @@ npm run dev
 
 StudySnap AI comes with an intelligent dual-engine architecture:
 
-1. **Google Gemini 3.8 Flash (`gemini-3.8-flash`)**:
+1. **Google Gemini 2.5 Flash (`gemini-2.5-flash`)**:
    - Official `google-genai` SDK integration for deep academic reasoning, diagram visual understanding, and quiz creation.
    - Enter your Gemini API key in the web app under **"AI Engine"** in the top navigation or configure `GEMINI_API_KEY` in your environment.
 2. **Local Smart Synthesizer (Built-in Offline Fallback)**:

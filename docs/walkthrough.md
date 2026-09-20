@@ -48,7 +48,7 @@
   - `Pillow` & Multimodal Base64 packaging: Analyzes diagrams, charts, equations, and images.
   - Text normalizer for pasted lectures and notes.
 - **AI Engine (`ai_engine.py`)**:
-  - Google Gemini 3.8 Flash (`gemini-3.8-flash`) integration via official `google-genai` SDK.
+  - Google Gemini 2.5 Flash (`gemini-2.5-flash`) integration via official `google-genai` SDK.
   - Built-in **Local Smart Synthesizer** fallback ensuring zero downtime when testing offline.
   - Quiz generation engine for Multiple Choice, True/False, and Identification.
   - On-the-fly transformation (`make_simpler`, `eli5`, `make_shorter`, `make_detailed`).

@@ -45,12 +45,12 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
   };
 
   const validateAndSetFile = (file: File) => {
-    const validExtensions = ['.pdf', '.ppt', '.pptx', '.jpg', '.jpeg', '.png', '.webp', '.txt', '.md'];
+    const validExtensions = ['.pdf', '.pptx', '.jpg', '.jpeg', '.png', '.webp', '.txt', '.md'];
     const ext = '.' + file.name.split('.').pop()?.toLowerCase();
     if (validExtensions.includes(ext)) {
       onFileSelected(file);
     } else {
-      alert(`Unsupported file format. Please upload a PDF, PowerPoint (PPT/PPTX), Image (JPG/PNG), or Text file.`);
+      alert(`Unsupported file format. Please upload a PDF, PowerPoint (PPTX), Image (JPG/PNG), or Text file.`);
     }
   };
 
@@ -85,7 +85,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
           <input
             ref={fileInputRef}
             type="file"
-            accept=".pdf,.ppt,.pptx,.jpg,.jpeg,.png,.webp,.txt,.md"
+            accept=".pdf,.pptx,.jpg,.jpeg,.png,.webp,.txt,.md"
             className="hidden"
             onChange={handleFileInputChange}
             disabled={disabled}
@@ -110,7 +110,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
                 PDF
               </span>
               <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-                PPT / PPTX
+                PPTX
               </span>
               <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                 JPG • PNG (OCR & Diagrams)

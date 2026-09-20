@@ -226,7 +226,7 @@ def health():
         "status": "healthy",
         "app": "StudySnap AI Backend",
         "has_env_gemini_key": gemini_env_key,
-        "default_model": "gemini-3.6-flash",
+        "default_model": "gemini-2.5-flash",
         "timestamp": datetime.datetime.now().isoformat()
     })
 
@@ -271,13 +271,14 @@ def extract_file():
         })
     except Exception as e:
         app.logger.error(f"Extraction failed: {e}")
-        return jsonify({"error": str(e)}), 500
+        status_code = 400 if isinstance(e, ValueError) else 500
+        return jsonify({"error": str(e)}), status_code
 
 @app.route("/api/generate-reviewer", methods=["POST"])
 def generate_reviewer():
     """Generate structured 10-section study reviewer."""
     data = request.get_json() or {}
-    text = data.get("text", "")
+    text = str(data.get("text") or "")
     image_b64 = data.get("image_b64")
     mime_type = data.get("mime_type")
     filename = data.get("filename", "Lesson")
@@ -302,7 +303,7 @@ def generate_reviewer():
                 tone=tone,
                 api_key=api_key
             )
-            ai_provider = "gemini-3.6-flash"
+            ai_provider = "gemini-2.5-flash"
         except Exception as e:
             app.logger.warning(f"Gemini generation failed: {e}. Falling back to local smart synthesizer.")
             reviewer_result = local_fallback_synthesizer(
@@ -365,7 +366,10 @@ def generate_quiz():
     """Generate quiz questions from reviewer data."""
     data = request.get_json() or {}
     reviewer_data = data.get("reviewer", {})
-    question_count = int(data.get("question_count", 10))
+    try:
+        question_count = max(1, min(20, int(data.get("question_count", 10))))
+    except (TypeError, ValueError):
+        return jsonify({"error": "question_count must be a number between 1 and 20"}), 400
     question_type = data.get("question_type", "mixed") # multiple_choice, true_false, identification, mixed
     
     api_key = request.headers.get("X-Gemini-Key") or data.get("api_key") or os.environ.get("GEMINI_API_KEY")

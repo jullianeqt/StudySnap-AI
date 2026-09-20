@@ -139,8 +139,10 @@ def process_file_input(file_obj, filename: str) -> Dict[str, Any]:
     
     if ext == ".pdf":
         return extract_from_pdf(stream)
-    elif ext in [".pptx", ".ppt"]:
+    elif ext == ".pptx":
         return extract_from_pptx(stream)
+    elif ext == ".ppt":
+        raise ValueError("Legacy .ppt files are not supported. Please save the presentation as .pptx and try again.")
     elif ext in [".png", ".jpg", ".jpeg", ".webp", ".bmp"]:
         return extract_from_image(stream, filename)
     elif ext in [".txt", ".md", ".csv"]:
