@@ -1,120 +1,68 @@
 [
   {
-    "id": "4cbaf496-d481-4c41-841b-a6a93e794024",
-    "title": "DT_106",
+    "id": "c74e804f-e4c0-4c38-bd48-b32b468ed3c4",
+    "title": "Smoke Test",
     "subject": "Computer Science / IT",
-    "date_created": "Sep 17, 2026 - 12:32 AM",
-    "pages_processed": 32,
+    "date_created": "Sep 21, 2026 - 12:24 AM",
+    "pages_processed": 1,
     "ai_provider": "local_synthesizer_fallback",
-    "filename": "Intro-to-Principles-of-Imaging-Part-1 PPT.pdf",
+    "filename": "Smoke Test",
     "status": "Ready",
     "reviewer": {
       "subject": "Computer Science / IT",
-      "lesson_title": "DT_106",
+      "lesson_title": "Smoke Test",
       "quick_review": [
-        "It has to be remembered that radiography is an art",
-        "and science acquired by study and practice in the",
-        "use of x-rays to produce images. The art is in the",
-        "equipment and accessories, such as film, cassettes,",
-        "and protection devices, to produce images of the"
+        "Comprehensive review covering foundational concepts of Smoke Test.",
+        "Emphasizes key definitions, core mechanics, and operational frameworks.",
+        "Provides exam-ready comparative models and critical memorization anchors."
       ],
       "keywords": [
         {
-          "term": "Trinity University Of Asia",
-          "definition": "BSRDT (Principles of Imaging)",
+          "term": "Binary Search",
+          "definition": "algorithm that repeatedly divides a sorted array in half. Its time complexity is O(log n).",
           "importance": "high"
         },
         {
-          "term": "The X",
-          "definition": "RAY IMAGING SYSTEM:",
+          "term": "Binary",
+          "definition": "Core academic concept emphasized in Smoke Test.",
           "importance": "high"
-        },
-        {
-          "term": "Type Of X",
-          "definition": "ray Approximate energy Application",
-          "importance": "high"
-        },
-        {
-          "term": "Grenz Rays 10",
-          "definition": "20 kVp Medicine: dermatology",
-          "importance": "medium"
-        },
-        {
-          "term": "Superficial 50",
-          "definition": "100 kVp Medicine: therapy of superficial tissues",
-          "importance": "medium"
-        },
-        {
-          "term": "Diagnostic 25",
-          "definition": "150 kVp Medicine: imaging anatomic structures and",
-          "importance": "medium"
-        },
-        {
-          "term": "Orthovoltage 200",
-          "definition": "300 kVp Medicine: therapy of deep-lying tissues",
-          "importance": "medium"
-        },
-        {
-          "term": "Supervoltage 300",
-          "definition": "1000 kVp Medicine: therapy of deep-lying tissues",
-          "importance": "medium"
         }
       ],
       "core_concepts": [
         {
-          "concept": "Trinity University Of Asia",
-          "explanation": "It has to be remembered that radiography is an art",
+          "concept": "Binary Search",
+          "explanation": "Binary search is an algorithm that repeatedly divides a sorted array in half. Its time complexity is O(log n).",
           "points": [
-            "and science acquired by study and practice in the"
-          ]
-        },
-        {
-          "concept": "The X",
-          "explanation": "use of x-rays to produce images. The art is in the",
-          "points": [
-            "equipment and accessories, such as film, cassettes,"
-          ]
-        },
-        {
-          "concept": "Type Of X",
-          "explanation": "and protection devices, to produce images of the",
-          "points": [
-            "body. The art of radiography also includes the"
+            "Essential property verified across all test scenarios."
           ]
         }
       ],
       "must_remember": [
-        "Master the exact definition and constraints of 'Trinity University Of Asia'.",
+        "Master the exact definition and constraints of 'Binary Search'.",
         "Be prepared to distinguish subtle operational differences between primary and secondary methods.",
-        "Verify edge cases and boundary conditions when answering problem-solving items.",
-        "Ensure accurate identification of sequential steps without skipping verification stages."
+        "Verify edge cases and boundary conditions when answering problem-solving items."
       ],
       "compare": [
         {
-          "concept_a": "Trinity University Of Asia",
-          "concept_b": "The X",
+          "concept_a": "Binary Search",
+          "concept_b": "Binary",
           "aspects": [
             {
               "aspect": "Primary Purpose",
-              "a_val": "Specialized for baseline Trinity University Of Asia handling",
-              "b_val": "Optimized for high-yield The X scenarios"
+              "a_val": "Specialized for baseline Binary Search handling",
+              "b_val": "Optimized for high-yield Binary scenarios"
             },
             {
               "aspect": "Core Characteristic",
               "a_val": "Direct, structured, deterministic",
               "b_val": "Adaptive, scalable, modular"
-            },
-            {
-              "aspect": "Common Exam Pitfall",
-              "a_val": "Confusing initialization with steady state",
-              "b_val": "Overlooking boundary requirements"
             }
           ]
         }
       ],
       "process_steps": [
         {
-          "process_title": "Operational Workflow in DT_106",
+          "process_title": "Operational Workflow in Smoke Test",
           "steps": [
             {
               "step_number": 1,
@@ -130,18 +78,13 @@
               "step_number": 3,
               "title": "Validation & Verification",
               "description": "Cross-check outcomes against constraints and expected metrics."
-            },
-            {
-              "step_number": 4,
-              "title": "Output & Conclusion",
-              "description": "Derive the final solution or synthesized outcome."
             }
           ]
         }
       ],
       "formulas_rules": [
         {
-          "name": "Fundamental Rule of DT_106",
+          "name": "Fundamental Rule of Smoke Test",
           "formula": "Output = Mechanism(Input, Constraints)",
           "variables": [
             {
@@ -159,214 +102,24 @@
       ],
       "examples": [
         {
-          "concept": "Trinity University Of Asia",
-          "example": "Applying Trinity University Of Asia to solve a standard exam problem set.",
+          "concept": "Binary Search",
+          "example": "Applying Binary Search to solve a standard exam problem set.",
           "explanation": "Illustrates how theoretical principles translate into direct practical results."
         }
       ],
       "possible_quiz_points": [
         {
-          "question_clue": "What is the defining characteristic of Trinity University Of Asia?",
-          "key_fact": "BSRDT (Principles of Imaging)",
+          "question_clue": "What is the defining characteristic of Binary Search?",
+          "key_fact": "algorithm that repeatedly divides a sorted array in half. Its time complexity is O(log n).",
           "question_type": "multiple_choice"
         },
         {
           "question_clue": "True or False: The primary execution flow requires validation before output.",
           "key_fact": "True. Validation ensures data integrity before concluding the process.",
           "question_type": "true_false"
-        },
-        {
-          "question_clue": "Identify the governing mechanism utilized in DT_106.",
-          "key_fact": "The X",
-          "question_type": "identification"
         }
       ],
-      "one_minute_review": "Summary: DT_106 is built around Trinity University Of Asia, The X, Type Of X. Remember the step-by-step workflow: Initialization -> Processing -> Verification -> Output. Prioritize clear definitions and note the contrast between primary mechanisms."
-    }
-  },
-  {
-    "id": "bc95a59e-ed08-43fa-bd0a-2c4ad5805243",
-    "title": "DT_106",
-    "subject": "Computer Science / IT",
-    "date_created": "Sep 17, 2026 - 12:28 AM",
-    "pages_processed": 32,
-    "ai_provider": "local_synthesizer_fallback",
-    "filename": "Intro-to-Principles-of-Imaging-Part-1 PPT.pdf",
-    "status": "Ready",
-    "reviewer": {
-      "subject": "Computer Science / IT",
-      "lesson_title": "DT_106",
-      "quick_review": [
-        "It has to be remembered that radiography is an art",
-        "and science acquired by study and practice in the",
-        "use of x-rays to produce images. The art is in the",
-        "equipment and accessories, such as film, cassettes,",
-        "and protection devices, to produce images of the"
-      ],
-      "keywords": [
-        {
-          "term": "Trinity University Of Asia",
-          "definition": "BSRDT (Principles of Imaging)",
-          "importance": "high"
-        },
-        {
-          "term": "The X",
-          "definition": "RAY IMAGING SYSTEM:",
-          "importance": "high"
-        },
-        {
-          "term": "Type Of X",
-          "definition": "ray Approximate energy Application",
-          "importance": "high"
-        },
-        {
-          "term": "Grenz Rays 10",
-          "definition": "20 kVp Medicine: dermatology",
-          "importance": "medium"
-        },
-        {
-          "term": "Superficial 50",
-          "definition": "100 kVp Medicine: therapy of superficial tissues",
-          "importance": "medium"
-        },
-        {
-          "term": "Diagnostic 25",
-          "definition": "150 kVp Medicine: imaging anatomic structures and",
-          "importance": "medium"
-        },
-        {
-          "term": "Orthovoltage 200",
-          "definition": "300 kVp Medicine: therapy of deep-lying tissues",
-          "importance": "medium"
-        },
-        {
-          "term": "Supervoltage 300",
-          "definition": "1000 kVp Medicine: therapy of deep-lying tissues",
-          "importance": "medium"
-        }
-      ],
-      "core_concepts": [
-        {
-          "concept": "Trinity University Of Asia",
-          "explanation": "It has to be remembered that radiography is an art",
-          "points": [
-            "and science acquired by study and practice in the"
-          ]
-        },
-        {
-          "concept": "The X",
-          "explanation": "use of x-rays to produce images. The art is in the",
-          "points": [
-            "equipment and accessories, such as film, cassettes,"
-          ]
-        },
-        {
-          "concept": "Type Of X",
-          "explanation": "and protection devices, to produce images of the",
-          "points": [
-            "body. The art of radiography also includes the"
-          ]
-        }
-      ],
-      "must_remember": [
-        "Master the exact definition and constraints of 'Trinity University Of Asia'.",
-        "Be prepared to distinguish subtle operational differences between primary and secondary methods.",
-        "Verify edge cases and boundary conditions when answering problem-solving items.",
-        "Ensure accurate identification of sequential steps without skipping verification stages."
-      ],
-      "compare": [
-        {
-          "concept_a": "Trinity University Of Asia",
-          "concept_b": "The X",
-          "aspects": [
-            {
-              "aspect": "Primary Purpose",
-              "a_val": "Specialized for baseline Trinity University Of Asia handling",
-              "b_val": "Optimized for high-yield The X scenarios"
-            },
-            {
-              "aspect": "Core Characteristic",
-              "a_val": "Direct, structured, deterministic",
-              "b_val": "Adaptive, scalable, modular"
-            },
-            {
-              "aspect": "Common Exam Pitfall",
-              "a_val": "Confusing initialization with steady state",
-              "b_val": "Overlooking boundary requirements"
-            }
-          ]
-        }
-      ],
-      "process_steps": [
-        {
-          "process_title": "Operational Workflow in DT_106",
-          "steps": [
-            {
-              "step_number": 1,
-              "title": "Initialization & Input",
-              "description": "Identify parameters, baseline state, and input requirements."
-            },
-            {
-              "step_number": 2,
-              "title": "Core Processing",
-              "description": "Apply standard rules, transformations, or governing mechanisms."
-            },
-            {
-              "step_number": 3,
-              "title": "Validation & Verification",
-              "description": "Cross-check outcomes against constraints and expected metrics."
-            },
-            {
-              "step_number": 4,
-              "title": "Output & Conclusion",
-              "description": "Derive the final solution or synthesized outcome."
-            }
-          ]
-        }
-      ],
-      "formulas_rules": [
-        {
-          "name": "Fundamental Rule of DT_106",
-          "formula": "Output = Mechanism(Input, Constraints)",
-          "variables": [
-            {
-              "symbol": "Input",
-              "meaning": "Primary data or stimulus"
-            },
-            {
-              "symbol": "Mechanism",
-              "meaning": "Underlying algorithm or natural law"
-            }
-          ],
-          "when_to_use": "Use when evaluating system behavior under fixed boundary conditions.",
-          "example": "Standard input parameters produce deterministic outputs."
-        }
-      ],
-      "examples": [
-        {
-          "concept": "Trinity University Of Asia",
-          "example": "Applying Trinity University Of Asia to solve a standard exam problem set.",
-          "explanation": "Illustrates how theoretical principles translate into direct practical results."
-        }
-      ],
-      "possible_quiz_points": [
-        {
-          "question_clue": "What is the defining characteristic of Trinity University Of Asia?",
-          "key_fact": "BSRDT (Principles of Imaging)",
-          "question_type": "multiple_choice"
-        },
-        {
-          "question_clue": "True or False: The primary execution flow requires validation before output.",
-          "key_fact": "True. Validation ensures data integrity before concluding the process.",
-          "question_type": "true_false"
-        },
-        {
-          "question_clue": "Identify the governing mechanism utilized in DT_106.",
-          "key_fact": "The X",
-          "question_type": "identification"
-        }
-      ],
-      "one_minute_review": "Summary: DT_106 is built around Trinity University Of Asia, The X, Type Of X. Remember the step-by-step workflow: Initialization -> Processing -> Verification -> Output. Prioritize clear definitions and note the contrast between primary mechanisms."
+      "one_minute_review": "Smoke Test: remember Binary Search, Binary and the flow Input -> Processing -> Output."
     }
   }
 ]
