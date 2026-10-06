@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { Pin } from 'lucide-react';
-import type { CoreConceptItem } from '../types/reviewer';
+import type { CoreConceptItem, SourceReference } from '../types/reviewer';
+import { SourceBadge } from './SourceBadge';
 
 interface ConceptCardProps {
   concept: CoreConceptItem;
   index: number;
+  onOpenSource?: (ref: SourceReference) => void;
 }
 
-export const ConceptCard: React.FC<ConceptCardProps> = ({ concept, index }) => {
+export const ConceptCard: React.FC<ConceptCardProps> = ({ concept, index, onOpenSource }) => {
   const [highlighted, setHighlighted] = useState(false);
 
   return (
@@ -45,6 +47,10 @@ export const ConceptCard: React.FC<ConceptCardProps> = ({ concept, index }) => {
       <p className="mt-2.5 text-sm text-ink-soft leading-relaxed font-medium">
         {concept.explanation}
       </p>
+
+      {onOpenSource && (
+        <SourceBadge sources={concept.sources} onSelect={onOpenSource} className="mt-2" />
+      )}
 
       {concept.points && concept.points.length > 0 && (
         <ul className="mt-3.5 space-y-1.5 pt-2.5 border-t border-border">

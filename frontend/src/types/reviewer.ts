@@ -4,6 +4,45 @@ export interface SourceReference {
   label?: string;
 }
 
+/** One extracted page/slide/text block, stored once per reviewer record. */
+export interface SourceSegment {
+  source_type: string;
+  source_index: number;
+  label: string;
+  text: string;
+}
+
+export type ExtractionWarning = string;
+
+export interface ExtractionMetadata {
+  pages?: number;
+  slides?: number;
+  words?: number;
+  characters?: number;
+  filename?: string;
+  width?: number;
+  height?: number;
+  format?: string;
+}
+
+/** Response shape of POST /api/extract. */
+export interface ExtractionResult {
+  success: boolean;
+  filename: string;
+  text: string;
+  segments: SourceSegment[];
+  page_count: number;
+  file_type: string;
+  metadata?: ExtractionMetadata;
+  quality: ExtractionQuality;
+  extraction_quality: ExtractionQuality;
+  warnings: ExtractionWarning[];
+  extraction_warnings: ExtractionWarning[];
+  image_b64?: string;
+  mime_type?: string;
+  error?: string;
+}
+
 export interface KeywordItem {
   term: string;
   definition: string;
@@ -129,7 +168,11 @@ export interface ReviewerRecord {
   reviewer: ReviewerData;
   generation_meta?: GenerationMeta;
   extraction_quality?: ExtractionQuality;
-  extraction_warnings?: string[];
+  extraction_warnings?: ExtractionWarning[];
+  /** Source verification payload. Absent on records saved before source viewing. */
+  file_type?: string;
+  segments?: SourceSegment[];
+  segments_truncated?: boolean;
 }
 
 export interface QuizQuestion {

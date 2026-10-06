@@ -1,14 +1,28 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   Copy, Download, HelpCircle, Sparkles, Wand2,
-  Search, Star, Check, ArrowRight, Zap
+  Search, Star, Check, ArrowRight, Zap, FileScan
 } from 'lucide-react';
-import type { ReviewerRecord, ReviewerData } from '../types/reviewer';
+import type {
+  ReviewerRecord, ReviewerData, SourceReference, MustRememberItem,
+} from '../types/reviewer';
 import { mustRememberText } from '../types/reviewer';
+import { QUALITY_STYLES, QUALITY_LABELS } from '../source';
 import { KeywordCard } from './KeywordCard';
 import { ConceptCard } from './ConceptCard';
 import { ComparisonTable } from './ComparisonTable';
 import { FormulaCard } from './FormulaCard';
+import { SourceBadge } from './SourceBadge';
+import { SourceViewer } from './SourceViewer';
+
+const providerLabel = (provider?: string): string => {
+  if (!provider) return 'Source-grounded generation';
+  if (provider === 'local_extractive') return 'Offline extractive engine';
+  if (provider === 'local_extractive_fallback') return 'Offline extractive engine (AI unavailable)';
+  if (provider.startsWith('local')) return 'Offline engine';
+  if (provider.startsWith('gemini')) return `AI model: ${provider}`;
+  return provider;
+};
 
 interface ReviewerProps {
   record: ReviewerRecord;
@@ -34,6 +48,19 @@ export const Reviewer: React.FC<ReviewerProps> = ({
   const [starredTerms, setStarredTerms] = useState<Set<string>>(new Set());
   const [isExporting, setIsExporting] = useState(false);
 
+  // Source verification panel
+  const [isSourceOpen, setIsSourceOpen] = useState(false);
+  const [sourceTarget, setSourceTarget] = useState<SourceReference | null>(null);
+  const [sourceSeq, setSourceSeq] = useState(0);
+
+  const openSource = useCallback((ref?: SourceReference | null) => {
+    setSourceTarget(ref ?? null);
+    setSourceSeq((seq) => seq + 1);
+    setIsSourceOpen(true);
+  }, []);
+
+  const closeSource = useCallback(() => setIsSourceOpen(false), []);
+
   // Defensive defaults: legitimately empty or legacy/missing sections must never crash the UI.
   const {
     data,
@@ -50,12 +77,20 @@ export const Reviewer: React.FC<ReviewerProps> = ({
     sourceFlags,
   } = useMemo(() => {
     const data: ReviewerData = record.reviewer || ({} as ReviewerData);
+    // Legacy records stored must_remember as plain strings; keep both shapes
+    // so provenance survives when it exists.
+    const rawMustRemember: Array<MustRememberItem | string> = data.must_remember || [];
     return {
       data,
       quickReview: data.quick_review || [],
       keywords: data.keywords || [],
       concepts: data.core_concepts || [],
-      mustRemember: (data.must_remember || []).map(mustRememberText).filter(Boolean),
+      mustRemember: rawMustRemember
+        .map((item) => ({
+          text: mustRememberText(item),
+          sources: typeof item === 'string' ? undefined : item.sources,
+        }))
+        .filter((item) => Boolean(item.text)),
       comparisons: data.compare || [],
       processes: data.process_steps || [],
       formulas: data.formulas_rules || [],
@@ -100,7 +135,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
     }
 
     if (mustRemember.length) {
-      output += `## 4. MUST REMEMBER\n${mustRemember.map(m => `⚡ ${m}`).join('\n')}\n\n`;
+      output += `## 4. MUST REMEMBER\n${mustRemember.map(m => `⚡ ${m.text}`).join('\n')}\n\n`;
     }
 
     if (comparisons.length) {
@@ -244,6 +279,15 @@ export const Reviewer: React.FC<ReviewerProps> = ({
           <div className="flex items-center space-x-1.5">
             <button
               type="button"
+              onClick={() => openSource(null)}
+              className="px-2.5 py-1.5 text-xs font-bold rounded-lg border border-border bg-sunken text-ink-soft hover:text-accent-ink hover:border-accent-line transition-colors inline-flex items-center space-x-1.5"
+              title="Open the extracted source text used for this reviewer"
+            >
+              <FileScan className="w-3.5 h-3.5" />
+              <span>View Source</span>
+            </button>
+            <button
+              type="button"
               onClick={handleCopyReviewer}
               className="p-2 text-ink-soft hover:text-accent-ink hover:bg-sunken rounded-xl transition-colors"
               title="Copy Reviewer"
@@ -306,16 +350,28 @@ export const Reviewer: React.FC<ReviewerProps> = ({
       {/* Reviewer Header Card */}
       <div className="bg-surface rounded-3xl p-8 border border-border shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '0ms' } as React.CSSProperties}>
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-          <span className="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-accent-soft text-accent-ink border border-accent-line">
-            {data.subject || "Academic Study Reviewer"}
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-accent-soft text-accent-ink border border-accent-line">
+              {data.subject || "Academic Study Reviewer"}
+            </span>
+            <span
+              className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full border ${
+                QUALITY_STYLES[record.extraction_quality || 'unknown'] ||
+                QUALITY_STYLES.unknown
+              }`}
+              title="How much usable text could be extracted from your upload"
+            >
+              {QUALITY_LABELS[record.extraction_quality || 'unknown'] ||
+                QUALITY_LABELS.unknown}
+            </span>
+          </div>
 
           <div className="flex items-center space-x-3 text-xs text-ink-muted">
             <span>{record.date_created}</span>
             <span>•</span>
             <span>{record.pages_processed} {record.pages_processed === 1 ? 'page/slide' : 'pages/slides'}</span>
             <span>•</span>
-            <span className="text-accent-ink font-semibold">{record.ai_provider || 'Source-grounded generation'}</span>
+            <span className="text-accent-ink font-semibold">{providerLabel(record.ai_provider)}</span>
           </div>
         </div>
 
@@ -323,7 +379,14 @@ export const Reviewer: React.FC<ReviewerProps> = ({
           {data.lesson_title || record.title}
         </h1>
         <p className="text-xs text-ink-muted mt-1">
-          Source-grounded generation • {record.generation_meta?.sections_generated ?? '—'} of 10 sections supported by source • StudySnap AI
+          Generated from uploaded material • {record.generation_meta?.sections_generated ?? '—'} of 10 sections supported by source •{' '}
+          <button
+            type="button"
+            onClick={() => openSource(null)}
+            className="font-bold text-accent-ink hover:underline no-print"
+          >
+            Verify with source
+          </button>
         </p>
 
         {/* Extraction / generation accuracy notices */}
@@ -397,6 +460,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
               keyword={kw}
               isStarred={starredTerms.has(kw.term)}
               onToggleStar={handleToggleStar}
+              onOpenSource={openSource}
             />
           ))}
         </div>
@@ -420,7 +484,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
 
         <div className="space-y-3.5">
           {filteredConcepts.map((concept, idx) => (
-            <ConceptCard key={idx} concept={concept} index={idx} />
+            <ConceptCard key={idx} concept={concept} index={idx} onOpenSource={openSource} />
           ))}
         </div>
       </section>
@@ -448,9 +512,12 @@ export const Reviewer: React.FC<ReviewerProps> = ({
               className="p-4 rounded-xl border border-amber-line bg-amber-soft/40 flex items-start space-x-3 shadow-2xs"
             >
               <Zap className="w-4 h-4 text-amber-ink shrink-0 mt-0.5 fill-amber-400" />
-              <p className="text-xs md:text-sm text-ink leading-relaxed font-semibold">
-                {item}
-              </p>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs md:text-sm text-ink leading-relaxed font-semibold">
+                  {item.text}
+                </p>
+                <SourceBadge sources={item.sources} onSelect={openSource} className="mt-1.5" />
+              </div>
             </div>
           ))}
         </div>
@@ -469,7 +536,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
             </h3>
           </div>
 
-          <ComparisonTable comparisons={comparisons} />
+          <ComparisonTable comparisons={comparisons} onOpenSource={openSource} />
         </section>
       )}
 
@@ -488,9 +555,12 @@ export const Reviewer: React.FC<ReviewerProps> = ({
           <div className="space-y-6">
             {processes.map((proc, pIdx) => (
               <div key={pIdx} className="space-y-3">
-                <h4 className="font-bold text-ink-soft text-sm">
-                  {proc.process_title}
-                </h4>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h4 className="font-bold text-ink-soft text-sm">
+                    {proc.process_title}
+                  </h4>
+                  <SourceBadge sources={proc.sources} onSelect={openSource} />
+                </div>
 
                 <div className="space-y-2.5">
                   {proc.steps.map((step) => (
@@ -532,7 +602,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {formulas.map((form, fIdx) => (
-              <FormulaCard key={fIdx} formula={form} />
+              <FormulaCard key={fIdx} formula={form} onOpenSource={openSource} />
             ))}
           </div>
         </section>
@@ -566,6 +636,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
                     {ex.explanation}
                   </p>
                 )}
+                <SourceBadge sources={ex.sources} onSelect={openSource} className="mt-2" />
               </div>
             ))}
           </div>
@@ -607,6 +678,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
                     <span className="text-accent-ink font-bold">Key Fact: </span>
                     {qp.key_fact}
                   </p>
+                  <SourceBadge sources={qp.sources} onSelect={openSource} className="mt-1" />
                 </div>
               </div>
             ))}
@@ -647,6 +719,15 @@ export const Reviewer: React.FC<ReviewerProps> = ({
         </div>
       </section>
       )}
+
+      {/* Source verification panel (side panel on desktop, sheet on mobile) */}
+      <SourceViewer
+        record={record}
+        isOpen={isSourceOpen}
+        target={sourceTarget}
+        targetSeq={sourceSeq}
+        onClose={closeSource}
+      />
     </div>
   );
 };

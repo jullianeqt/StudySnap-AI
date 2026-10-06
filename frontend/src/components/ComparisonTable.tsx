@@ -1,12 +1,17 @@
 import React from 'react';
 import { ArrowLeftRight } from 'lucide-react';
-import type { ComparisonItem } from '../types/reviewer';
+import type { ComparisonItem, SourceReference } from '../types/reviewer';
+import { SourceBadge } from './SourceBadge';
 
 interface ComparisonTableProps {
   comparisons: ComparisonItem[];
+  onOpenSource?: (ref: SourceReference) => void;
 }
 
-export const ComparisonTable: React.FC<ComparisonTableProps> = ({ comparisons }) => {
+export const ComparisonTable: React.FC<ComparisonTableProps> = ({
+  comparisons,
+  onOpenSource,
+}) => {
   if (!comparisons || comparisons.length === 0) return null;
 
   return (
@@ -17,16 +22,21 @@ export const ComparisonTable: React.FC<ComparisonTableProps> = ({ comparisons })
           className="rounded-2xl border border-border bg-surface overflow-hidden shadow-xs hover:border-accent-line transition-colors"
         >
           {/* Header Banner */}
-          <div className="bg-sunken/80 px-5 py-3 border-b border-border flex items-center justify-between">
+          <div className="bg-sunken/80 px-5 py-3 border-b border-border flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center space-x-2">
               <ArrowLeftRight className="w-4 h-4 text-accent-ink" />
               <h4 className="font-bold text-ink text-sm">
                 Comparison: <span className="text-accent-ink">{comp.concept_a}</span> vs <span className="text-violet-ink">{comp.concept_b}</span>
               </h4>
             </div>
-            <span className="text-[11px] font-semibold text-ink-muted bg-surface px-2 py-0.5 rounded border border-border">
-              Exam Differential
-            </span>
+            <div className="flex items-center gap-2">
+              {onOpenSource && (
+                <SourceBadge sources={comp.sources} onSelect={onOpenSource} />
+              )}
+              <span className="text-[11px] font-semibold text-ink-muted bg-surface px-2 py-0.5 rounded border border-border">
+                Exam Differential
+              </span>
+            </div>
           </div>
 
           {/* Responsive Table */}

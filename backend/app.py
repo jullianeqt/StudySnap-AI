@@ -20,7 +20,7 @@ from reportlab.platypus import (
     Table,
     TableStyle,
 )
-from extractors import process_file_input
+from extractors import process_file_input, extract_from_text
 from ai_engine import (
     generate_reviewer_gemini,
     generate_quiz_gemini,
@@ -44,6 +44,112 @@ HISTORY_FILE = os.path.join(os.path.dirname(__file__), "history.json")
 SOURCE_MARKER_RE = re.compile(r"---\s*\[(?:Page|Slide)\s+\d+\]\s*---")
 
 TRANSFORM_ACTIONS = {"make_simpler", "eli5", "make_shorter", "make_detailed"}
+
+# One history record never stores more than this many characters of extracted
+# source text, so a large textbook upload cannot bloat history.json.
+MAX_STORED_SEGMENT_CHARS = 120_000
+
+SOURCE_REF_LABEL_RE = re.compile(r"\[(Page|Slide)\s+(\d+)\]")
+
+
+def clean_segments(raw_segments):
+    """Normalize uploaded extraction segments and bound how much text we keep.
+
+    Returns (segments, truncated). Truncation is reported to the UI instead of
+    being hidden, so the viewer can say plainly that part of the source is not
+    stored.
+    """
+    if not isinstance(raw_segments, list):
+        return [], False
+
+    cleaned = []
+    for position, item in enumerate(raw_segments, start=1):
+        if not isinstance(item, dict):
+            continue
+        source_type = item.get("source_type")
+        if not isinstance(source_type, str) or not source_type.strip():
+            continue
+        index = item.get("source_index")
+        if isinstance(index, bool) or not isinstance(index, (int, float)):
+            index = position
+        index = int(index)
+        if index < 1:
+            index = position
+        label = item.get("label")
+        label = label.strip()[:80] if isinstance(label, str) and label.strip() else ""
+        if not label:
+            label = f"Section {position}"
+        text = item.get("text")
+        text = text if isinstance(text, str) else ""
+        cleaned.append({
+            "source_type": source_type.strip()[:40],
+            "source_index": index,
+            "label": label,
+            "text": text,
+        })
+
+    bounded = []
+    total = 0
+    truncated = False
+    for segment in cleaned:
+        size = len(segment["text"])
+        if not bounded:
+            # Always keep the first segment so a viewer target always exists.
+            if size > MAX_STORED_SEGMENT_CHARS:
+                segment["text"] = segment["text"][:MAX_STORED_SEGMENT_CHARS]
+                truncated = True
+            bounded.append(segment)
+            total = len(segment["text"])
+            continue
+        if total + size > MAX_STORED_SEGMENT_CHARS:
+            truncated = True
+            break
+        bounded.append(segment)
+        total += size
+    return bounded, truncated
+
+
+def segments_from_marked_text(text):
+    """Rebuild Page/Slide segments for pasted text that carries source markers."""
+    matches = list(SOURCE_MARKER_RE.finditer(text or ""))
+    if not matches:
+        return []
+    segments = []
+    preamble = (text[: matches[0].start()] or "").strip()
+    if preamble:
+        segments.append({
+            "source_type": "text",
+            "source_index": 1,
+            "label": "Text",
+            "text": preamble,
+        })
+    for position, match in enumerate(matches):
+        start = match.end()
+        end = matches[position + 1].start() if position + 1 < len(matches) else len(text)
+        info = SOURCE_REF_LABEL_RE.search(match.group(0))
+        kind = info.group(1) if info else "Page"
+        number = int(info.group(2)) if info else position + 1
+        segments.append({
+            "source_type": "page" if kind == "Page" else "slide",
+            "source_index": number,
+            "label": f"{kind} {number}",
+            "text": text[start:end].strip(),
+        })
+    return segments
+
+
+def infer_file_type(segments, explicit=None):
+    """Best-effort file type for the viewer header; never guessed beyond evidence."""
+    if isinstance(explicit, str) and explicit.strip():
+        return explicit.strip()[:40]
+    source_types = {seg.get("source_type") for seg in segments}
+    if "pdf_page" in source_types:
+        return "pdf"
+    if "pptx_slide" in source_types:
+        return "pptx"
+    if "image" in source_types:
+        return "image"
+    return "text"
 
 
 def load_history():
@@ -328,6 +434,8 @@ def generate_reviewer():
         if isinstance(warning, str) and warning.strip()
     ]
     extraction_quality = data.get("extraction_quality") or "unknown"
+    if extraction_quality not in {"good", "partial", "poor", "unknown"}:
+        extraction_quality = "unknown"
 
     # Check for API key from request headers or body
     api_key = request.headers.get("X-Gemini-Key") or data.get("api_key") or os.environ.get("GEMINI_API_KEY")
@@ -390,11 +498,37 @@ def generate_reviewer():
 
     reviewer_result = normalize_reviewer(reviewer_result)
 
-    if not segments:
-        segments = SOURCE_MARKER_RE.findall(text)
-        source_segments = len(segments) if segments else (1 if text.strip() else 0)
-    else:
-        source_segments = len(segments)
+    stored_segments, segments_truncated = clean_segments(segments)
+    if not stored_segments:
+        # Pasted text skips /api/extract, so rebuild the page/slide structure
+        # from the same markers the generator was grounded on.
+        fallback_segments = segments_from_marked_text(text)
+        if not fallback_segments and text.strip():
+            fallback_segments = [{
+                "source_type": "text",
+                "source_index": 1,
+                "label": "Text",
+                "text": text.strip(),
+            }]
+        stored_segments, segments_truncated = clean_segments(fallback_segments)
+        if extraction_quality in (None, "", "unknown") and text.strip():
+            # Score pasted text with the same heuristic the extractor uses, so the
+            # viewer never shows an unearned "good" quality.
+            scored = extract_from_text(text, filename)
+            extraction_quality = scored.get("quality") or "unknown"
+            derived_warnings = [
+                warning for warning in (scored.get("warnings") or [])
+                if isinstance(warning, str) and warning.strip()
+            ]
+            if derived_warnings and not extraction_warnings:
+                extraction_warnings = derived_warnings
+                generation_warnings.extend(
+                    warning for warning in derived_warnings
+                    if warning not in generation_warnings
+                )
+
+    source_segments = len(stored_segments) if stored_segments else (1 if text.strip() else 0)
+    file_type = infer_file_type(stored_segments, data.get("file_type"))
 
     generation_meta = build_generation_meta(
         reviewer=reviewer_result,
@@ -419,6 +553,10 @@ def generate_reviewer():
         "generation_meta": generation_meta,
         "extraction_quality": extraction_quality,
         "extraction_warnings": extraction_warnings,
+        # Source verification payload (stored once per record, never per item)
+        "file_type": file_type,
+        "segments": stored_segments,
+        "segments_truncated": segments_truncated,
         "raw_text_length": len(text),
         "filename": filename
     }
@@ -438,6 +576,9 @@ def generate_reviewer():
         "generation_meta": record["generation_meta"],
         "extraction_quality": record["extraction_quality"],
         "extraction_warnings": record["extraction_warnings"],
+        "file_type": record["file_type"],
+        "segments": record["segments"],
+        "segments_truncated": record["segments_truncated"],
         "reviewer": record["reviewer"]
     })
     # Keep last 50

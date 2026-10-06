@@ -12,7 +12,9 @@ import { ReviewerHistory } from './components/ReviewerHistory';
 import { ApiKeyModal } from './components/ApiKeyModal';
 import { ThemeMenu } from './components/ThemeMenu';
 import { useTheme } from './theme';
-import type { ReviewerRecord, QuizQuestion, QuizConfig } from './types/reviewer';
+import type {
+  ReviewerRecord, QuizQuestion, QuizConfig, ExtractionResult, ExtractionQuality,
+} from './types/reviewer';
 
 const getApiUrl = (path: string) => {
   const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '');
@@ -92,9 +94,10 @@ export function App() {
       let mimeType: string | undefined = undefined;
       let pageCount = 1;
       let filename = "Lecture Notes";
-      let extractionSegments: unknown[] = [];
+      let extractionSegments: ExtractionResult['segments'] = [];
       let extractionWarnings: string[] = [];
-      let extractionQuality = 'unknown';
+      let extractionQuality: ExtractionQuality = 'unknown';
+      let fileType: string = 'text';
 
       // If file was uploaded, extract via backend first
       if (activeInputTab === 'upload' && selectedFile) {
@@ -112,14 +115,17 @@ export function App() {
           throw new Error(errData.error || 'Failed to extract content from uploaded file.');
         }
 
-        const extractData = await extractRes.json();
+        const extractData: ExtractionResult = await extractRes.json();
         extractedText = extractData.text || '';
         imageB64 = extractData.image_b64;
         mimeType = extractData.mime_type;
         pageCount = extractData.page_count || 1;
         extractionSegments = Array.isArray(extractData.segments) ? extractData.segments : [];
-        extractionWarnings = Array.isArray(extractData.extraction_warnings) ? extractData.extraction_warnings : [];
+        extractionWarnings = Array.isArray(extractData.extraction_warnings)
+          ? extractData.extraction_warnings
+          : [];
         extractionQuality = extractData.extraction_quality || 'unknown';
+        fileType = extractData.file_type || 'text';
       }
 
       if (!extractedText.trim() && !imageB64) {
@@ -145,6 +151,7 @@ export function App() {
           compression: requestedCompression,
           tone: requestedTone,
           page_count: pageCount,
+          file_type: fileType,
           segments: extractionSegments,
           extraction_warnings: extractionWarnings,
           extraction_quality: extractionQuality,

@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
 import { Star, Copy, Check } from 'lucide-react';
-import type { KeywordItem } from '../types/reviewer';
+import type { KeywordItem, SourceReference } from '../types/reviewer';
+import { SourceBadge } from './SourceBadge';
 
 interface KeywordCardProps {
   keyword: KeywordItem;
   onToggleStar?: (term: string) => void;
   isStarred?: boolean;
+  onOpenSource?: (ref: SourceReference) => void;
 }
 
 export const KeywordCard: React.FC<KeywordCardProps> = ({
   keyword,
   onToggleStar,
   isStarred = false,
+  onOpenSource,
 }) => {
   const [copied, setCopied] = useState(false);
 
@@ -71,6 +74,10 @@ export const KeywordCard: React.FC<KeywordCardProps> = ({
         <span className="text-ink-muted font-medium mr-1.5">—</span>
         {keyword.definition}
       </p>
+
+      {onOpenSource && (
+        <SourceBadge sources={keyword.sources} onSelect={onOpenSource} className="mt-2" />
+      )}
     </div>
   );
 };

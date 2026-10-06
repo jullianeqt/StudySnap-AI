@@ -1,12 +1,14 @@
 import React from 'react';
 import { Calculator, HelpCircle, Lightbulb } from 'lucide-react';
-import type { FormulaItem } from '../types/reviewer';
+import type { FormulaItem, SourceReference } from '../types/reviewer';
+import { SourceBadge } from './SourceBadge';
 
 interface FormulaCardProps {
   formula: FormulaItem;
+  onOpenSource?: (ref: SourceReference) => void;
 }
 
-export const FormulaCard: React.FC<FormulaCardProps> = ({ formula }) => {
+export const FormulaCard: React.FC<FormulaCardProps> = ({ formula, onOpenSource }) => {
   return (
     <div className="p-5 rounded-2xl border border-border bg-surface shadow-xs hover:border-accent-line transition-all">
       <div className="flex items-center justify-between gap-2 mb-3">
@@ -66,6 +68,10 @@ export const FormulaCard: React.FC<FormulaCardProps> = ({ formula }) => {
             {formula.example}
           </p>
         </div>
+      )}
+
+      {onOpenSource && (
+        <SourceBadge sources={formula.sources} onSelect={onOpenSource} className="mt-3" />
       )}
     </div>
   );
