@@ -44,7 +44,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
             </div>
             <div>
               <h3 className="font-bold text-slate-900 text-lg">AI Engine Settings</h3>
-              <p className="text-xs text-slate-500">Configure Google Gemini 3.8 Flash</p>
+              <p className="text-xs text-slate-500">Configure the Gemini API key (gemini-2.5-flash)</p>
             </div>
           </div>
           <button
@@ -87,7 +87,9 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
               <span>Built-in Fallback Active</span>
             </div>
             <p className="leading-relaxed">
-              If no API key is set, StudySnap AI automatically uses our built-in <strong>Local Smart Synthesizer</strong> to extract definitions, equations, comparisons, and quiz questions offline!
+              With no API key, StudySnap uses an offline <strong>extractive engine</strong>: it only pulls statements
+              that appear directly in your material, so unsupported sections are left empty instead of being
+              invented. Image uploads and AI rewriting require a key.
             </p>
           </div>
 

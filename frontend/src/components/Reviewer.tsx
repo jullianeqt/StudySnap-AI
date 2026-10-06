@@ -4,6 +4,7 @@ import {
   Search, Star, Check, ArrowRight, Zap
 } from 'lucide-react';
 import type { ReviewerRecord, ReviewerData } from '../types/reviewer';
+import { mustRememberText } from '../types/reviewer';
 import { KeywordCard } from './KeywordCard';
 import { ConceptCard } from './ConceptCard';
 import { ComparisonTable } from './ComparisonTable';
@@ -33,7 +34,44 @@ export const Reviewer: React.FC<ReviewerProps> = ({
   const [starredTerms, setStarredTerms] = useState<Set<string>>(new Set());
   const [isExporting, setIsExporting] = useState(false);
 
-  const data: ReviewerData = record.reviewer;
+  // Defensive defaults: legitimately empty or legacy/missing sections must never crash the UI.
+  const {
+    data,
+    quickReview,
+    keywords,
+    concepts,
+    mustRemember,
+    comparisons,
+    processes,
+    formulas,
+    examples,
+    quizPoints,
+    oneMinuteReview,
+    sourceFlags,
+  } = useMemo(() => {
+    const data: ReviewerData = record.reviewer || ({} as ReviewerData);
+    return {
+      data,
+      quickReview: data.quick_review || [],
+      keywords: data.keywords || [],
+      concepts: data.core_concepts || [],
+      mustRemember: (data.must_remember || []).map(mustRememberText).filter(Boolean),
+      comparisons: data.compare || [],
+      processes: data.process_steps || [],
+      formulas: data.formulas_rules || [],
+      examples: data.examples || [],
+      quizPoints: data.possible_quiz_points || [],
+      oneMinuteReview: data.one_minute_review || '',
+      sourceFlags: data.source_flags || [],
+    };
+  }, [record.reviewer]);
+
+  // Accuracy notices: extraction problems + generation diagnostics + source conflicts.
+  const notices = Array.from(new Set([
+    ...(record.extraction_warnings || []),
+    ...(record.generation_meta?.warnings || []),
+    ...sourceFlags.map((flag) => `Source conflict flagged: ${flag}`),
+  ].filter(Boolean)));
 
   // Star / Save term handler
   const handleToggleStar = (term: string) => {
@@ -45,39 +83,49 @@ export const Reviewer: React.FC<ReviewerProps> = ({
     });
   };
 
-  // Copy full reviewer as clean study sheet
+  // Copy full reviewer as clean study sheet (empty sections are skipped)
   const handleCopyReviewer = () => {
     let output = `# ${data.lesson_title || record.title}\nSubject: ${data.subject}\n\n`;
-    
-    output += `## 1. QUICK REVIEW\n${data.quick_review.map(b => `• ${b}`).join('\n')}\n\n`;
-    
-    output += `## 2. KEYWORDS\n${data.keywords.map(k => `**${k.term}** — ${k.definition}`).join('\n\n')}\n\n`;
-    
-    output += `## 3. CORE CONCEPTS\n${data.core_concepts.map(c => `### ${c.concept}\n${c.explanation}\n${c.points?.map(p => `  • ${p}`).join('\n')}`).join('\n\n')}\n\n`;
-    
-    output += `## 4. MUST REMEMBER\n${data.must_remember.map(m => `⚡ ${m}`).join('\n')}\n\n`;
-    
-    if (data.compare?.length) {
-      output += `## 5. COMPARE\n${data.compare.map(cp => `### ${cp.concept_a} vs ${cp.concept_b}\n${cp.aspects.map(a => `- ${a.aspect}: ${a.a_val} | ${a.b_val}`).join('\n')}`).join('\n\n')}\n\n`;
-    }
-    
-    if (data.process_steps?.length) {
-      output += `## 6. PROCESS / STEPS\n${data.process_steps.map(pr => `### ${pr.process_title}\n${pr.steps.map(s => `${s.step_number}. ${s.title}: ${s.description}`).join('\n')}`).join('\n\n')}\n\n`;
-    }
-    
-    if (data.formulas_rules?.length) {
-      output += `## 7. FORMULAS / RULES\n${data.formulas_rules.map(f => `### ${f.name}\nEquation: ${f.formula}\nWhen to use: ${f.when_to_use}`).join('\n\n')}\n\n`;
+
+    if (quickReview.length) {
+      output += `## 1. QUICK REVIEW\n${quickReview.map(b => `• ${b}`).join('\n')}\n\n`;
     }
 
-    if (data.examples?.length) {
-      output += `## 8. EXAMPLES\n${data.examples.map(ex => `### ${ex.concept}\nExample: ${ex.example}\nExplanation: ${ex.explanation}`).join('\n\n')}\n\n`;
+    if (keywords.length) {
+      output += `## 2. KEYWORDS\n${keywords.map(k => `**${k.term}** — ${k.definition}`).join('\n\n')}\n\n`;
     }
 
-    if (data.possible_quiz_points?.length) {
-      output += `## 9. POSSIBLE QUIZ POINTS\n${data.possible_quiz_points.map(qp => `• Clue: ${qp.question_clue} -> Key Fact: ${qp.key_fact}`).join('\n')}\n\n`;
+    if (concepts.length) {
+      output += `## 3. CORE CONCEPTS\n${concepts.map(c => `### ${c.concept}\n${c.explanation}\n${c.points?.map(p => `  • ${p}`).join('\n') || ''}`).join('\n\n')}\n\n`;
     }
 
-    output += `## 10. ONE-MINUTE REVIEW\n${data.one_minute_review}\n`;
+    if (mustRemember.length) {
+      output += `## 4. MUST REMEMBER\n${mustRemember.map(m => `⚡ ${m}`).join('\n')}\n\n`;
+    }
+
+    if (comparisons.length) {
+      output += `## 5. COMPARE\n${comparisons.map(cp => `### ${cp.concept_a} vs ${cp.concept_b}\n${(cp.aspects || []).map(a => `- ${a.aspect}: ${a.a_val} | ${a.b_val}`).join('\n')}`).join('\n\n')}\n\n`;
+    }
+
+    if (processes.length) {
+      output += `## 6. PROCESS / STEPS\n${processes.map(pr => `### ${pr.process_title}\n${(pr.steps || []).map(s => `${s.step_number}. ${s.title}: ${s.description}`).join('\n')}`).join('\n\n')}\n\n`;
+    }
+
+    if (formulas.length) {
+      output += `## 7. FORMULAS / RULES\n${formulas.map(f => `### ${f.name}\nEquation: ${f.formula}${f.when_to_use ? `\nWhen to use: ${f.when_to_use}` : ''}`).join('\n\n')}\n\n`;
+    }
+
+    if (examples.length) {
+      output += `## 8. EXAMPLES\n${examples.map(ex => `### ${ex.concept}\nExample: ${ex.example}${ex.explanation ? `\nExplanation: ${ex.explanation}` : ''}`).join('\n\n')}\n\n`;
+    }
+
+    if (quizPoints.length) {
+      output += `## 9. POSSIBLE QUIZ POINTS\n${quizPoints.map(qp => `• Clue: ${qp.question_clue} -> Key Fact: ${qp.key_fact}`).join('\n')}\n\n`;
+    }
+
+    if (oneMinuteReview) {
+      output += `## 10. ONE-MINUTE REVIEW\n${oneMinuteReview}\n`;
+    }
 
     navigator.clipboard.writeText(output);
     setCopied(true);
@@ -97,34 +145,35 @@ export const Reviewer: React.FC<ReviewerProps> = ({
 
   // Filtered keywords based on search
   const filteredKeywords = useMemo(() => {
-    if (!searchQuery.trim()) return data.keywords || [];
+    if (!searchQuery.trim()) return keywords;
     const q = searchQuery.toLowerCase();
-    return (data.keywords || []).filter(
+    return keywords.filter(
       k => k.term.toLowerCase().includes(q) || k.definition.toLowerCase().includes(q)
     );
-  }, [data.keywords, searchQuery]);
+  }, [keywords, searchQuery]);
 
   // Filtered concepts based on search
   const filteredConcepts = useMemo(() => {
-    if (!searchQuery.trim()) return data.core_concepts || [];
+    if (!searchQuery.trim()) return concepts;
     const q = searchQuery.toLowerCase();
-    return (data.core_concepts || []).filter(
+    return concepts.filter(
       c => c.concept.toLowerCase().includes(q) || c.explanation.toLowerCase().includes(q) || c.points?.some(p => p.toLowerCase().includes(q))
     );
-  }, [data.core_concepts, searchQuery]);
+  }, [concepts, searchQuery]);
 
+  // Only navigate to sections that actually contain content.
   const navSections = [
-    { id: 'quick-review', label: '1. Quick Review' },
-    { id: 'keywords', label: '2. Keywords' },
-    { id: 'concepts', label: '3. Core Concepts' },
-    { id: 'must-remember', label: '4. Must Remember' },
-    { id: 'compare', label: '5. Compare' },
-    { id: 'steps', label: '6. Steps' },
-    { id: 'formulas', label: '7. Formulas' },
-    { id: 'examples', label: '8. Examples' },
-    { id: 'quiz-points', label: '9. Quiz Points' },
-    { id: 'one-minute', label: '10. One-Minute' },
-  ];
+    quickReview.length > 0 && { id: 'quick-review', label: '1. Quick Review' },
+    keywords.length > 0 && { id: 'keywords', label: '2. Keywords' },
+    concepts.length > 0 && { id: 'concepts', label: '3. Core Concepts' },
+    mustRemember.length > 0 && { id: 'must-remember', label: '4. Must Remember' },
+    comparisons.length > 0 && { id: 'compare', label: '5. Compare' },
+    processes.length > 0 && { id: 'steps', label: '6. Steps' },
+    formulas.length > 0 && { id: 'formulas', label: '7. Formulas' },
+    examples.length > 0 && { id: 'examples', label: '8. Examples' },
+    quizPoints.length > 0 && { id: 'quiz-points', label: '9. Quiz Points' },
+    oneMinuteReview.length > 0 && { id: 'one-minute', label: '10. One-Minute' },
+  ].filter((sec): sec is { id: string; label: string } => Boolean(sec));
 
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
@@ -261,7 +310,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
             <span>•</span>
             <span>{record.pages_processed} {record.pages_processed === 1 ? 'page/slide' : 'pages/slides'}</span>
             <span>•</span>
-            <span className="text-indigo-600 font-semibold">{record.ai_provider || 'Gemini 3.8 Flash'}</span>
+            <span className="text-indigo-600 font-semibold">{record.ai_provider || 'Source-grounded generation'}</span>
           </div>
         </div>
 
@@ -269,8 +318,19 @@ export const Reviewer: React.FC<ReviewerProps> = ({
           {data.lesson_title || record.title}
         </h1>
         <p className="text-xs text-slate-500 mt-1">
-          Exam Preparation Sheet • High-Yield Concepts • StudySnap AI
+          Source-grounded generation • {record.generation_meta?.sections_generated ?? '—'} of 10 sections supported by source • StudySnap AI
         </p>
+
+        {/* Extraction / generation accuracy notices */}
+        {notices.length > 0 && (
+          <div className="mt-4 p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-xs space-y-1">
+            {notices.map((notice, idx) => (
+              <p key={idx} className="text-amber-900 leading-relaxed">
+                {notice}
+              </p>
+            ))}
+          </div>
+        )}
 
         {starredTerms.size > 0 && (
           <div className="mt-4 p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-xs flex items-center space-x-2">
@@ -283,6 +343,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
       </div>
 
       {/* SECTION 1: QUICK REVIEW */}
+      {quickReview.length > 0 && (
       <section id="quick-review" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '70ms' } as React.CSSProperties}>
         <div className="flex items-center space-x-2.5 mb-4 pb-2 border-b border-slate-100">
           <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs">
@@ -291,11 +352,11 @@ export const Reviewer: React.FC<ReviewerProps> = ({
           <h3 className="text-lg font-bold text-slate-900 uppercase tracking-wide">
             Quick Review
           </h3>
-          <span className="text-xs text-slate-400 ml-auto">3–7 High-Yield Points</span>
+          <span className="text-xs text-slate-400 ml-auto">{quickReview.length} source-backed points</span>
         </div>
 
         <ul className="space-y-2.5">
-          {data.quick_review.map((point, idx) => (
+          {quickReview.map((point, idx) => (
             <li key={idx} className="flex items-start text-sm text-slate-700 space-x-3">
               <span className="w-5 h-5 rounded-full bg-blue-50 text-blue-600 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
                 {idx + 1}
@@ -305,8 +366,10 @@ export const Reviewer: React.FC<ReviewerProps> = ({
           ))}
         </ul>
       </section>
+      )}
 
       {/* SECTION 2: KEYWORDS */}
+      {keywords.length > 0 && (
       <section id="keywords" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '140ms' } as React.CSSProperties}>
         <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
           <div className="flex items-center space-x-2.5">
@@ -333,8 +396,10 @@ export const Reviewer: React.FC<ReviewerProps> = ({
           ))}
         </div>
       </section>
+      )}
 
       {/* SECTION 3: CORE CONCEPTS */}
+      {concepts.length > 0 && (
       <section id="concepts" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '210ms' } as React.CSSProperties}>
         <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
           <div className="flex items-center space-x-2.5">
@@ -354,8 +419,10 @@ export const Reviewer: React.FC<ReviewerProps> = ({
           ))}
         </div>
       </section>
+      )}
 
       {/* SECTION 4: MUST REMEMBER */}
+      {mustRemember.length > 0 && (
       <section id="must-remember" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '280ms' } as React.CSSProperties}>
         <div className="flex items-center space-x-2.5 mb-4 pb-2 border-b border-slate-100">
           <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-xs">
@@ -370,7 +437,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {data.must_remember.map((item, idx) => (
+          {mustRemember.map((item, idx) => (
             <div
               key={idx}
               className="p-4 rounded-xl border border-amber-200 bg-amber-50/40 flex items-start space-x-3 shadow-2xs"
@@ -383,9 +450,10 @@ export const Reviewer: React.FC<ReviewerProps> = ({
           ))}
         </div>
       </section>
+      )}
 
       {/* SECTION 5: COMPARE */}
-      {data.compare && data.compare.length > 0 && (
+      {comparisons.length > 0 && (
         <section id="compare" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '350ms' } as React.CSSProperties}>
           <div className="flex items-center space-x-2.5 mb-4 pb-2 border-b border-slate-100">
             <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xs">
@@ -396,12 +464,12 @@ export const Reviewer: React.FC<ReviewerProps> = ({
             </h3>
           </div>
 
-          <ComparisonTable comparisons={data.compare} />
+          <ComparisonTable comparisons={comparisons} />
         </section>
       )}
 
       {/* SECTION 6: PROCESS / STEPS */}
-      {data.process_steps && data.process_steps.length > 0 && (
+      {processes.length > 0 && (
         <section id="steps" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '420ms' } as React.CSSProperties}>
           <div className="flex items-center space-x-2.5 mb-4 pb-2 border-b border-slate-100">
             <div className="w-7 h-7 rounded-lg bg-cyan-50 text-cyan-600 flex items-center justify-center font-bold text-xs">
@@ -413,7 +481,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
           </div>
 
           <div className="space-y-6">
-            {data.process_steps.map((proc, pIdx) => (
+            {processes.map((proc, pIdx) => (
               <div key={pIdx} className="space-y-3">
                 <h4 className="font-bold text-slate-800 text-sm">
                   {proc.process_title}
@@ -446,7 +514,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
       )}
 
       {/* SECTION 7: FORMULAS / RULES */}
-      {data.formulas_rules && data.formulas_rules.length > 0 && (
+      {formulas.length > 0 && (
         <section id="formulas" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '490ms' } as React.CSSProperties}>
           <div className="flex items-center space-x-2.5 mb-4 pb-2 border-b border-slate-100">
             <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xs">
@@ -458,7 +526,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {data.formulas_rules.map((form, fIdx) => (
+            {formulas.map((form, fIdx) => (
               <FormulaCard key={fIdx} formula={form} />
             ))}
           </div>
@@ -466,7 +534,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
       )}
 
       {/* SECTION 8: EXAMPLES */}
-      {data.examples && data.examples.length > 0 && (
+      {examples.length > 0 && (
         <section id="examples" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '560ms' } as React.CSSProperties}>
           <div className="flex items-center space-x-2.5 mb-4 pb-2 border-b border-slate-100">
             <div className="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-xs">
@@ -478,7 +546,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
           </div>
 
           <div className="space-y-3.5">
-            {data.examples.map((ex, exIdx) => (
+            {examples.map((ex, exIdx) => (
               <div key={exIdx} className="p-4 rounded-xl border border-slate-200 bg-slate-50/40">
                 <span className="font-bold text-slate-900 text-xs md:text-sm">
                   {ex.concept}
@@ -500,7 +568,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
       )}
 
       {/* SECTION 9: POSSIBLE QUIZ POINTS */}
-      {data.possible_quiz_points && data.possible_quiz_points.length > 0 && (
+      {quizPoints.length > 0 && (
         <section id="quiz-points" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '630ms' } as React.CSSProperties}>
           <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
             <div className="flex items-center space-x-2.5">
@@ -522,7 +590,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
           </div>
 
           <div className="space-y-3">
-            {data.possible_quiz_points.map((qp, qpIdx) => (
+            {quizPoints.map((qp, qpIdx) => (
               <div
                 key={qpIdx}
                 className="p-4 rounded-xl border border-indigo-100 bg-indigo-50/30 flex items-start space-x-3"
@@ -542,6 +610,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
       )}
 
       {/* SECTION 10: ONE-MINUTE REVIEW */}
+      {oneMinuteReview.length > 0 && (
       <section id="one-minute" className="bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-3xl p-8 shadow-lg reviewer-card print-page-break reveal-section" style={{ '--section-delay': '700ms' } as React.CSSProperties}>
         <div className="flex items-center justify-between mb-4 pb-3 border-b border-indigo-700/50">
           <div className="flex items-center space-x-2.5">
@@ -558,7 +627,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
         </div>
 
         <p className="text-sm md:text-base leading-relaxed text-indigo-100 font-medium">
-          {data.one_minute_review}
+          {oneMinuteReview}
         </p>
 
         <div className="mt-6 pt-4 border-t border-indigo-800/60 flex flex-wrap items-center justify-between gap-3 text-xs text-indigo-300">
@@ -572,6 +641,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
           </button>
         </div>
       </section>
+      )}
     </div>
   );
 };

@@ -33,6 +33,7 @@ export function App() {
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [currentReviewer, setCurrentReviewer] = useState<ReviewerRecord | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [infoMsg, setInfoMsg] = useState<string | null>(null);
   
   // Modals & Panels
   const [isQuizGenOpen, setIsQuizGenOpen] = useState<boolean>(false);
@@ -96,6 +97,9 @@ export function App() {
       let mimeType: string | undefined = undefined;
       let pageCount = 1;
       let filename = "Lecture Notes";
+      let extractionSegments: unknown[] = [];
+      let extractionWarnings: string[] = [];
+      let extractionQuality = 'unknown';
 
       // If file was uploaded, extract via backend first
       if (activeInputTab === 'upload' && selectedFile) {
@@ -118,6 +122,9 @@ export function App() {
         imageB64 = extractData.image_b64;
         mimeType = extractData.mime_type;
         pageCount = extractData.page_count || 1;
+        extractionSegments = Array.isArray(extractData.segments) ? extractData.segments : [];
+        extractionWarnings = Array.isArray(extractData.extraction_warnings) ? extractData.extraction_warnings : [];
+        extractionQuality = extractData.extraction_quality || 'unknown';
       }
 
       if (!extractedText.trim() && !imageB64) {
@@ -143,6 +150,9 @@ export function App() {
           compression: requestedCompression,
           tone: requestedTone,
           page_count: pageCount,
+          segments: extractionSegments,
+          extraction_warnings: extractionWarnings,
+          extraction_quality: extractionQuality,
         }),
       });
 
@@ -200,8 +210,11 @@ export function App() {
         setQuizQuestions(data.questions);
         setIsQuizGenOpen(false);
         setIsQuizModalOpen(true);
+        if (data.message) {
+          alert(data.message);
+        }
       } else {
-        throw new Error('No quiz questions generated.');
+        throw new Error(data.message || 'No quiz questions could be built from this reviewer.');
       }
     } catch (err: any) {
       alert(err.message || 'Quiz generation failed.');
@@ -214,27 +227,45 @@ export function App() {
   const handleTransform = async (action: 'make_simpler' | 'eli5' | 'make_shorter' | 'make_detailed') => {
     if (!currentReviewer) return;
 
+    setInfoMsg(null);
     try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (apiKey) {
+        headers['X-Gemini-Key'] = apiKey;
+      }
+
       const res = await fetch(getApiUrl('/api/transform'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           reviewer: currentReviewer.reviewer,
           action: action,
         }),
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.reviewer) {
-          setCurrentReviewer({
-            ...currentReviewer,
-            reviewer: data.reviewer,
-          });
-        }
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Transform failed.');
       }
-    } catch (err) {
+
+      const data = await res.json();
+      if (data.reviewer) {
+        setCurrentReviewer({
+          ...currentReviewer,
+          reviewer: data.reviewer,
+        });
+      }
+      // Honest disclosure when the AI engine could not (or did not) rewrite the content.
+      if (data.note) {
+        setInfoMsg(data.note);
+        setTimeout(() => setInfoMsg(null), 8000);
+      }
+    } catch (err: any) {
       console.error('Transform error:', err);
+      setInfoMsg(err.message || 'Transform failed. The original reviewer was kept unchanged.');
+      setTimeout(() => setInfoMsg(null), 8000);
     }
   };
 
@@ -325,7 +356,7 @@ export function App() {
               }`}
             >
               <Key className="w-3.5 h-3.5" />
-              <span>{apiKey ? 'Gemini 3.8 Active' : 'AI Engine'}</span>
+              <span>{apiKey ? 'AI Engine Active' : 'AI Engine'}</span>
             </button>
           </div>
         </div>
@@ -468,6 +499,14 @@ export function App() {
           <ProcessingState filename={selectedFile?.name || "Pasted Lecture"} />
         )}
 
+        {/* Honest notice for transforms / generation limits */}
+        {currentReviewer && infoMsg && (
+          <div className="mb-4 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start space-x-2">
+            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <span>{infoMsg}</span>
+          </div>
+        )}
+
         {/* Active Study Reviewer Sheet */}
         {currentReviewer && !isProcessing && (
           <Reviewer
@@ -493,7 +532,7 @@ export function App() {
           <div className="flex items-center space-x-4">
             <span className="flex items-center space-x-1 text-slate-500">
               <Shield className="w-3.5 h-3.5 text-indigo-500" />
-              <span>100% Faithful to Source Material</span>
+              <span>Source-grounded generation</span>
             </span>
           </div>
         </div>
