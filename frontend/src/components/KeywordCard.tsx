@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
 import { Star, Copy, Check } from 'lucide-react';
 import type { KeywordItem, SourceReference } from '../types/reviewer';
+import type { ReviewerSearch } from '../search';
 import { SourceBadge } from './SourceBadge';
+import { Highlight } from './Highlight';
 
 interface KeywordCardProps {
   keyword: KeywordItem;
   onToggleStar?: (term: string) => void;
   isStarred?: boolean;
   onOpenSource?: (ref: SourceReference) => void;
+  search?: ReviewerSearch;
+  /** Search-index path prefix for this card (e.g. `kw.3`). */
+  basePath?: string;
 }
 
 export const KeywordCard: React.FC<KeywordCardProps> = ({
@@ -15,6 +20,8 @@ export const KeywordCard: React.FC<KeywordCardProps> = ({
   onToggleStar,
   isStarred = false,
   onOpenSource,
+  search,
+  basePath,
 }) => {
   const [copied, setCopied] = useState(false);
 
@@ -32,9 +39,9 @@ export const KeywordCard: React.FC<KeywordCardProps> = ({
         : 'border-border hover:border-accent-line'
     }`}>
       <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center space-x-2">
-          <span className="font-bold text-ink text-base group-hover:text-accent-ink transition-colors">
-            {keyword.term}
+        <div className="flex items-center space-x-2 min-w-0">
+          <span className="font-bold text-ink text-base group-hover:text-accent-ink transition-colors break-words">
+            <Highlight text={keyword.term} path={`${basePath}.term`} search={search} />
           </span>
           {keyword.importance === 'high' && (
             <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-rose-soft text-rose-ink">
@@ -70,9 +77,9 @@ export const KeywordCard: React.FC<KeywordCardProps> = ({
         </div>
       </div>
 
-      <p className="mt-1.5 text-sm text-ink-soft leading-relaxed">
+      <p className="mt-1.5 text-sm text-ink-soft leading-relaxed break-words">
         <span className="text-ink-muted font-medium mr-1.5">—</span>
-        {keyword.definition}
+        <Highlight text={keyword.definition} path={`${basePath}.def`} search={search} />
       </p>
 
       {onOpenSource && (
@@ -81,4 +88,3 @@ export const KeywordCard: React.FC<KeywordCardProps> = ({
     </div>
   );
 };
-

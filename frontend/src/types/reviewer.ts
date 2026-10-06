@@ -161,6 +161,8 @@ export interface ReviewerRecord {
   subject: string;
   date_created: string;
   pages_processed: number;
+  /** Present on history entries only ("Ready"). */
+  status?: string;
   compression?: 'quick' | 'standard' | 'detailed';
   tone?: 'standard' | 'simpler' | 'eli5';
   ai_provider?: string;

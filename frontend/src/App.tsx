@@ -86,6 +86,7 @@ export function App() {
     requestedTone = tone,
   ) => {
     setErrorMsg(null);
+    setTargetSearchTopic('');
     setIsProcessing(true);
 
     try {
@@ -309,6 +310,22 @@ export function App() {
     }
   };
 
+  const handleDeleteReviewer = async (id: string) => {
+    const target = historyList.find((item) => item.id === id);
+    const label = target?.title ? `"${target.title}"` : 'this reviewer';
+    if (!confirm(`Delete ${label} from your history?`)) return;
+    try {
+      const res = await fetch(getApiUrl(`/api/history/${encodeURIComponent(id)}`), {
+        method: 'DELETE',
+      });
+      if (!res.ok && res.status !== 404) throw new Error('Could not delete this reviewer.');
+      setHistoryList((prev) => prev.filter((item) => item.id !== id));
+    } catch (e) {
+      console.error(e);
+      alert('Could not delete this reviewer. Please try again.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-page text-ink flex flex-col">
       {/* Top Navigation */}
@@ -509,6 +526,7 @@ export function App() {
         {/* Active Study Reviewer Sheet */}
         {currentReviewer && !isProcessing && (
           <Reviewer
+            key={currentReviewer.id}
             record={currentReviewer}
             onOpenQuizGenerator={() => setIsQuizGenOpen(true)}
             onTransform={handleTransform}
@@ -562,10 +580,12 @@ export function App() {
         onClose={() => setIsHistoryOpen(false)}
         history={historyList}
         onSelectReviewer={(rec) => {
+          setTargetSearchTopic('');
           setCurrentReviewer(rec);
           window.scrollTo({ top: 380, behavior: 'smooth' });
         }}
         onClearHistory={handleClearHistory}
+        onDeleteReviewer={handleDeleteReviewer}
       />
 
       {/* API Key Modal */}

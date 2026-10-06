@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { X, Search, ChevronUp, ChevronDown, TriangleAlert, FileText } from 'lucide-react';
 import type { ReviewerRecord, SourceReference, SourceSegment } from '../types/reviewer';
 import { QUALITY_STYLES, QUALITY_LABELS } from '../source';
+import { matchOffsets } from '../search';
 
 const MAX_MATCHES = 500;
 
@@ -10,21 +11,6 @@ const FILE_TYPE_LABELS: Record<string, string> = {
   pptx: 'PowerPoint',
   text: 'Text file',
   image: 'Image',
-};
-
-const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-const matchOffsets = (text: string, query: string): number[] => {
-  if (!query || !text) return [];
-  const regex = new RegExp(escapeRegExp(query), 'gi');
-  const offsets: number[] = [];
-  let found = regex.exec(text);
-  while (found !== null && offsets.length < MAX_MATCHES) {
-    offsets.push(found.index);
-    if (found[0].length === 0) regex.lastIndex += 1;
-    found = regex.exec(text);
-  }
-  return offsets;
 };
 
 /** Map a badge reference onto the stored segment it points at. */

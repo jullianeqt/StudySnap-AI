@@ -22,3 +22,13 @@ export const sourceRefLabel = (ref: SourceReference): string => {
   if (ref.type === 'image') return 'Image';
   return 'Text';
 };
+
+/** Honest, human-readable generation provider label (header + history cards). */
+export const providerLabel = (provider?: string): string => {
+  if (!provider) return 'Source-grounded generation';
+  if (provider === 'local_extractive') return 'Offline extractive engine';
+  if (provider === 'local_extractive_fallback') return 'Offline extractive engine (AI unavailable)';
+  if (provider.startsWith('local')) return 'Offline engine';
+  if (provider.startsWith('gemini')) return `AI model: ${provider}`;
+  return provider;
+};

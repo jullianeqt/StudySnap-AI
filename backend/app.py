@@ -709,5 +709,20 @@ def history_endpoint():
     history = load_history()
     return jsonify({"success": True, "history": history})
 
+
+@app.route("/api/history/<reviewer_id>", methods=["DELETE"])
+def delete_history_item(reviewer_id):
+    """Delete exactly one history record by reviewer id, leaving the rest intact."""
+    history = load_history()
+    remaining = [item for item in history if str(item.get("id")) != reviewer_id]
+    if len(remaining) == len(history):
+        return jsonify({"success": False, "error": "Reviewer not found"}), 404
+    save_history(remaining)
+    return jsonify({
+        "success": True,
+        "deleted": reviewer_id,
+        "remaining": len(remaining),
+    })
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=PORT, debug=False)
