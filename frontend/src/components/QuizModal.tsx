@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, ChevronRight, ChevronLeft, Check } from 'lucide-react';
 import type { QuizQuestion } from '../types/reviewer';
 import { QuizResults } from './QuizResults';
@@ -19,6 +19,15 @@ export const QuizModal: React.FC<QuizModalProps> = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
   const [isFinished, setIsFinished] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen || questions.length === 0) return null;
 
@@ -61,21 +70,27 @@ export const QuizModal: React.FC<QuizModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6">
-      <div className="bg-slate-50 rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 relative my-8">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="quiz-dialog-title"
+        className="bg-sunken rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-border relative my-8"
+      >
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-slate-200">
+        <div className="flex items-center justify-between pb-4 border-b border-border">
           <div className="flex items-center space-x-2">
-            <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-indigo-100 text-indigo-800">
+            <span id="quiz-dialog-title" className="px-2.5 py-1 text-xs font-bold rounded-lg bg-accent-soft text-accent-ink">
               Exam Practice Quiz
             </span>
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-ink-muted" aria-live="polite">
               {!isFinished && `Question ${currentIndex + 1} of ${questions.length}`}
             </span>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-200/60 transition-colors"
+            aria-label="Close quiz"
+            className="p-1.5 text-ink-muted hover:text-ink-soft rounded-lg hover:bg-border/60 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -85,21 +100,21 @@ export const QuizModal: React.FC<QuizModalProps> = ({
         {!isFinished ? (
           <div className="mt-6 space-y-6">
             {/* Progress Bar */}
-            <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+            <div className="w-full bg-border h-2 rounded-full overflow-hidden" role="progressbar" aria-valuenow={progressPercent} aria-valuemin={0} aria-valuemax={100} aria-label="Quiz progress">
               <div
-                className="bg-indigo-600 h-full transition-all duration-300 rounded-full"
+                className="bg-accent h-full transition-all duration-300 rounded-full"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
 
             {/* Question Card */}
-            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
-              <div className="flex items-center justify-between mb-3 text-xs text-slate-400 font-semibold uppercase tracking-wider">
+            <div className="bg-surface rounded-2xl p-6 border border-border shadow-xs">
+              <div className="flex items-center justify-between mb-3 text-xs text-ink-muted font-semibold uppercase tracking-wider">
                 <span>{currentQ.type.replace('_', ' ')}</span>
-                <span className="text-indigo-600">Topic: {currentQ.topic}</span>
+                <span className="text-accent-ink">Topic: {currentQ.topic}</span>
               </div>
 
-              <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug">
+              <h3 className="text-base sm:text-lg font-bold text-ink leading-snug">
                 {currentQ.question}
               </h3>
 
@@ -112,15 +127,16 @@ export const QuizModal: React.FC<QuizModalProps> = ({
                       key={oIdx}
                       type="button"
                       onClick={() => handleSelectOption(opt)}
+                      aria-pressed={isSelected}
                       className={`w-full text-left p-3.5 rounded-xl border text-sm transition-all flex items-center justify-between ${
                         isSelected
-                          ? 'border-indigo-600 bg-indigo-50/70 font-semibold text-indigo-950 ring-1 ring-indigo-600'
-                          : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                          ? 'border-accent bg-accent-soft/70 font-semibold text-ink ring-1 ring-accent'
+                          : 'border-border bg-surface hover:bg-sunken text-ink-soft'
                       }`}
                     >
                       <span>{opt}</span>
                       <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                        isSelected ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300'
+                        isSelected ? 'border-accent bg-accent text-white' : 'border-border-strong'
                       }`}>
                         {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
                       </div>
@@ -137,10 +153,11 @@ export const QuizModal: React.FC<QuizModalProps> = ({
                           key={tf}
                           type="button"
                           onClick={() => handleSelectOption(tf)}
+                          aria-pressed={isSelected}
                           className={`p-4 rounded-xl border text-center font-bold text-base transition-all ${
                             isSelected
-                              ? 'border-indigo-600 bg-indigo-50 text-indigo-900 ring-2 ring-indigo-500'
-                              : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                              ? 'border-accent bg-accent-soft text-accent-ink ring-2 ring-accent'
+                              : 'border-border bg-surface hover:bg-sunken text-ink-soft'
                           }`}
                         >
                           {tf}
@@ -156,10 +173,11 @@ export const QuizModal: React.FC<QuizModalProps> = ({
                       type="text"
                       value={userAnswers[currentQ.id] || ''}
                       onChange={(e) => handleSelectOption(e.target.value)}
+                      aria-label={`Answer for question ${currentIndex + 1}`}
                       placeholder="Type the exact term or concept..."
-                      className="w-full p-3.5 rounded-xl border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                      className="w-full p-3.5 rounded-xl border border-border-strong bg-surface text-ink text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-line"
                     />
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-[11px] text-ink-muted">
                       Hint: Identification answers are checked case-insensitively against the reviewer.
                     </p>
                   </div>
@@ -173,7 +191,7 @@ export const QuizModal: React.FC<QuizModalProps> = ({
                 type="button"
                 onClick={handlePrev}
                 disabled={currentIndex === 0}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 font-semibold text-xs hover:bg-slate-50 transition-colors disabled:opacity-30 disabled:pointer-events-none flex items-center space-x-1"
+                className="px-4 py-2.5 rounded-xl border border-border bg-surface text-ink-soft font-semibold text-xs hover:bg-sunken transition-colors disabled:opacity-30 disabled:pointer-events-none flex items-center space-x-1"
               >
                 <ChevronLeft className="w-4 h-4" />
                 <span>Previous</span>
@@ -182,7 +200,7 @@ export const QuizModal: React.FC<QuizModalProps> = ({
               <button
                 type="button"
                 onClick={handleNext}
-                className="px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold text-xs hover:bg-indigo-700 transition-colors shadow-xs flex items-center space-x-1.5"
+                className="px-6 py-2.5 rounded-xl bg-accent text-white font-semibold text-xs hover:bg-accent-hover transition-colors shadow-xs flex items-center space-x-1.5"
               >
                 <span>{currentIndex === questions.length - 1 ? 'Finish Quiz' : 'Next Question'}</span>
                 <ChevronRight className="w-4 h-4" />

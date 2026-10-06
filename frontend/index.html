@@ -6,8 +6,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>StudySnap AI — High-Yield Exam & Quiz Reviewer Generator</title>
     <meta name="description" content="Turn your lectures into concise, exam-focused reviewers, digital study sheets, and practice quizzes." />
+    <script>
+      // Apply the stored theme before first paint to avoid a light flash.
+      (function () {
+        try {
+          var stored = localStorage.getItem('studysnap_theme');
+          var pref = stored === 'light' || stored === 'dark' ? stored : 'system';
+          var resolved = pref === 'system'
+            ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+            : pref;
+          document.documentElement.dataset.theme = resolved;
+          document.documentElement.style.colorScheme = resolved;
+        } catch (e) {
+          document.documentElement.dataset.theme = 'light';
+        }
+      })();
+    </script>
   </head>
-  <body class="bg-slate-50 text-slate-900">
+  <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
