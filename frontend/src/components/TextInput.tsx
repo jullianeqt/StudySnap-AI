@@ -21,8 +21,8 @@ export const TextInput: React.FC<TextInputProps> = ({
   return (
     <div className="w-full space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center space-x-2 text-xs text-slate-500">
-          <BookOpen className="w-3.5 h-3.5 text-indigo-500" />
+        <div className="flex items-center space-x-2 text-xs text-ink-muted">
+          <BookOpen className="w-3.5 h-3.5 text-accent-ink" />
           <span>Try a sample college lecture:</span>
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
@@ -32,7 +32,8 @@ export const TextInput: React.FC<TextInputProps> = ({
               type="button"
               disabled={disabled}
               onClick={() => onSelectSample(sample.content)}
-              className="text-xs px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 font-medium border border-slate-200 hover:border-indigo-200 transition-colors"
+              aria-label={`Insert sample lesson: ${sample.category}`}
+              className="text-xs px-2.5 py-1 rounded-lg bg-sunken hover:bg-accent-soft hover:text-accent-ink text-ink-soft font-medium border border-border hover:border-accent-line transition-colors"
             >
               ⚡ {sample.category}
             </button>
@@ -40,16 +41,17 @@ export const TextInput: React.FC<TextInputProps> = ({
         </div>
       </div>
 
-      <div className="relative rounded-2xl border border-slate-300 bg-white focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
+      <div className="relative rounded-2xl border border-border-strong bg-surface focus-within:border-accent focus-within:ring-2 focus-within:ring-accent-line transition-all">
         <textarea
           value={text}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
+          aria-label="Lesson content"
           placeholder="Paste lecture notes, textbook chapters, slide transcripts, or study guidelines here..."
-          className="w-full h-48 p-4 text-sm text-slate-800 placeholder-slate-400 bg-transparent border-0 resize-none focus:outline-none focus:ring-0 leading-relaxed"
+          className="w-full h-48 p-4 text-sm text-ink bg-transparent border-0 resize-none focus:outline-none focus:ring-0 leading-relaxed"
         />
 
-        <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 border-t border-slate-100 rounded-b-2xl text-xs text-slate-500">
+        <div className="flex items-center justify-between px-4 py-2.5 bg-sunken border-t border-border rounded-b-2xl text-xs text-ink-muted">
           <div className="flex items-center space-x-3">
             <span>{wordCount} words</span>
             <span>•</span>
@@ -61,7 +63,8 @@ export const TextInput: React.FC<TextInputProps> = ({
               type="button"
               onClick={() => onChange('')}
               disabled={disabled}
-              className="inline-flex items-center space-x-1 text-slate-400 hover:text-rose-600 font-medium transition-colors"
+              aria-label="Clear lesson content"
+              className="inline-flex items-center space-x-1 text-ink-muted hover:text-rose-ink font-medium transition-colors"
             >
               <Trash2 className="w-3.5 h-3.5" />
               <span>Clear</span>

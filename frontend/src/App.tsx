@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-  Sparkles, History, Key, FileText, Upload, Sliders, Shield, Zap, AlertCircle, Moon, Sun
+  Sparkles, History, Key, FileText, Upload, Sliders, Shield, Zap, AlertCircle
 } from 'lucide-react';
 import { FileUploader } from './components/FileUploader';
 import { TextInput } from './components/TextInput';
@@ -10,6 +10,8 @@ import { QuizGenerator } from './components/QuizGenerator';
 import { QuizModal } from './components/QuizModal';
 import { ReviewerHistory } from './components/ReviewerHistory';
 import { ApiKeyModal } from './components/ApiKeyModal';
+import { ThemeMenu } from './components/ThemeMenu';
+import { useTheme } from './theme';
 import type { ReviewerRecord, QuizQuestion, QuizConfig } from './types/reviewer';
 
 const getApiUrl = (path: string) => {
@@ -18,9 +20,7 @@ const getApiUrl = (path: string) => {
 };
 
 export function App() {
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => (
-    localStorage.getItem('studysnap_theme') === 'dark' ? 'dark' : 'light'
-  ));
+  const { preference: theme, setPreference: setTheme } = useTheme();
   const [activeInputTab, setActiveInputTab] = useState<'upload' | 'text'>('upload');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [pastedText, setPastedText] = useState<string>('');
@@ -54,11 +54,6 @@ export function App() {
   useEffect(() => {
     fetchHistory();
   }, []);
-
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    localStorage.setItem('studysnap_theme', theme);
-  }, [theme]);
 
   const fetchHistory = async () => {
     try {
@@ -308,39 +303,36 @@ export function App() {
   };
 
   return (
-    <div className={`min-h-screen bg-slate-50 text-slate-900 flex flex-col selection:bg-indigo-500/20 ${theme === 'dark' ? 'theme-dark' : ''}`}>
+    <div className="min-h-screen bg-page text-ink flex flex-col">
       {/* Top Navigation */}
-      <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-8 py-3.5 no-print">
+      <header className="sticky top-0 z-30 bg-elevated/80 backdrop-blur-md border-b border-border/80 px-4 sm:px-8 py-3.5 no-print">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setCurrentReviewer(null)}>
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white font-black text-lg shadow-md shadow-indigo-200">
+          <button
+            type="button"
+            onClick={() => setCurrentReviewer(null)}
+            className="flex items-center space-x-3 cursor-pointer text-left"
+            aria-label="Back to the StudySnap home screen"
+          >
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-accent to-violet flex items-center justify-center text-white font-black text-lg shadow-md shadow-accent-line">
               ⚡
             </div>
             <div>
-              <span className="font-extrabold text-slate-900 text-lg tracking-tight">StudySnap</span>
-              <span className="ml-1 text-xs font-bold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700">AI</span>
+              <span className="font-extrabold text-ink text-lg tracking-tight">StudySnap</span>
+              <span className="ml-1 text-xs font-bold px-1.5 py-0.5 rounded bg-accent-soft text-accent-ink">AI</span>
             </div>
-          </div>
+          </button>
 
           <div className="flex items-center space-x-2">
-            <button
-              type="button"
-              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-              className="p-2 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-xl transition-colors"
-              title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
-              aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
-            >
-              {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-            </button>
+            <ThemeMenu preference={theme} onChange={setTheme} />
             <button
               type="button"
               onClick={() => setIsHistoryOpen(true)}
-              className="px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-indigo-600 hover:bg-slate-100 rounded-xl transition-colors inline-flex items-center space-x-1.5"
+              className="px-3 py-1.5 text-xs font-semibold text-ink-soft hover:text-accent-ink hover:bg-sunken rounded-xl transition-colors inline-flex items-center space-x-1.5"
             >
               <History className="w-4 h-4" />
               <span>History</span>
               {historyList.length > 0 && (
-                <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-[10px] font-bold flex items-center justify-center">
+                <span className="w-5 h-5 rounded-full bg-accent text-white text-[10px] font-bold flex items-center justify-center">
                   {historyList.length}
                 </span>
               )}
@@ -351,8 +343,8 @@ export function App() {
               onClick={() => setIsApiModalOpen(true)}
               className={`px-3 py-1.5 text-xs font-semibold rounded-xl border transition-colors inline-flex items-center space-x-1.5 ${
                 apiKey
-                  ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-                  : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                  ? 'border-emerald-line bg-emerald-soft text-emerald-ink'
+                  : 'border-border bg-surface text-ink-soft hover:bg-sunken'
               }`}
             >
               <Key className="w-3.5 h-3.5" />
@@ -366,31 +358,31 @@ export function App() {
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 pt-8 pb-16">
         {/* Hero Section */}
         <div className="text-center max-w-2xl mx-auto mb-10 no-print">
-          <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-bold mb-4">
+          <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-accent-soft border border-accent-line text-accent-ink text-xs font-bold mb-4">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Smart Exam & Quiz Reviewer Generator</span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight mb-3">
-            Turn your lessons into reviewers you'll <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">actually want to read</span>.
+          <h1 className="text-3xl sm:text-5xl font-black text-ink tracking-tight leading-tight mb-3">
+            Turn your lessons into reviewers you'll <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-violet">actually want to read</span>.
           </h1>
 
-          <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-xl mx-auto">
+          <p className="text-sm sm:text-base text-ink-soft leading-relaxed max-w-xl mx-auto">
             Upload a PDF, PPT, image, or text. StudySnap AI turns it into concise, high-yield notes for faster quiz and exam review.
           </p>
         </div>
 
         {/* Upload & Input Card */}
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 mb-10 no-print">
+        <div className="bg-surface rounded-3xl border border-border shadow-sm p-6 sm:p-8 mb-10 no-print">
           {/* Tabs */}
-          <div className="flex items-center space-x-2 border-b border-slate-100 pb-4 mb-6">
+          <div className="flex items-center space-x-2 border-b border-border pb-4 mb-6">
             <button
               type="button"
               onClick={() => setActiveInputTab('upload')}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all inline-flex items-center space-x-2 ${
                 activeInputTab === 'upload'
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200/70'
+                  ? 'bg-accent text-white shadow-xs'
+                  : 'bg-sunken text-ink-soft hover:bg-border/70'
               }`}
             >
               <Upload className="w-4 h-4" />
@@ -402,8 +394,8 @@ export function App() {
               onClick={() => setActiveInputTab('text')}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all inline-flex items-center space-x-2 ${
                 activeInputTab === 'text'
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200/70'
+                  ? 'bg-accent text-white shadow-xs'
+                  : 'bg-sunken text-ink-soft hover:bg-border/70'
               }`}
             >
               <FileText className="w-4 h-4" />
@@ -429,20 +421,20 @@ export function App() {
           )}
 
           {/* Reviewer Preferences (Compression & Tone) */}
-          <div className="mt-6 pt-5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4">
+          <div className="mt-6 pt-5 border-t border-border flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap items-center gap-3 text-xs">
-              <div className="flex items-center space-x-1.5 text-slate-500 font-semibold">
-                <Sliders className="w-3.5 h-3.5 text-indigo-600" />
+              <div className="flex items-center space-x-1.5 text-ink-muted font-semibold">
+                <Sliders className="w-3.5 h-3.5 text-accent-ink" />
                 <span>Length:</span>
               </div>
-              <div className="inline-flex rounded-lg bg-slate-100 p-0.5">
+              <div className="inline-flex rounded-lg bg-sunken p-0.5">
                 {(['quick', 'standard', 'detailed'] as const).map((lvl) => (
                   <button
                     key={lvl}
                     type="button"
                     onClick={() => setCompression(lvl)}
                     className={`px-2.5 py-1 rounded-md capitalize font-semibold transition-all ${
-                      compression === lvl ? 'bg-white text-indigo-700 shadow-2xs' : 'text-slate-600'
+                      compression === lvl ? 'bg-surface text-accent-ink shadow-2xs' : 'text-ink-soft'
                     }`}
                   >
                     {lvl}
@@ -450,10 +442,10 @@ export function App() {
                 ))}
               </div>
 
-              <div className="flex items-center space-x-1.5 text-slate-500 font-semibold ml-2">
+              <div className="flex items-center space-x-1.5 text-ink-muted font-semibold ml-2">
                 <span>Tone:</span>
               </div>
-              <div className="inline-flex rounded-lg bg-slate-100 p-0.5">
+              <div className="inline-flex rounded-lg bg-sunken p-0.5">
                 {[
                   { id: 'standard', label: 'Academic' },
                   { id: 'simpler', label: 'Simpler' },
@@ -464,7 +456,7 @@ export function App() {
                     type="button"
                     onClick={() => setTone(t.id as any)}
                     className={`px-2.5 py-1 rounded-md font-semibold transition-all ${
-                      tone === t.id ? 'bg-white text-indigo-700 shadow-2xs' : 'text-slate-600'
+                      tone === t.id ? 'bg-surface text-accent-ink shadow-2xs' : 'text-ink-soft'
                     }`}
                   >
                     {t.label}
@@ -478,7 +470,7 @@ export function App() {
               type="button"
               disabled={isProcessing || (activeInputTab === 'upload' && !selectedFile && !pastedText) || (activeInputTab === 'text' && !pastedText.trim())}
               onClick={() => handleGenerate()}
-              className="px-7 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center space-x-2 disabled:opacity-40 disabled:pointer-events-none"
+              className="px-7 py-3 rounded-2xl bg-accent hover:bg-accent-hover text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center space-x-2 disabled:opacity-40 disabled:pointer-events-none"
             >
               <Zap className="w-4 h-4 fill-current" />
               <span>Generate Study Reviewer</span>
@@ -487,8 +479,8 @@ export function App() {
 
           {/* Error Message */}
           {errorMsg && (
-            <div className="mt-4 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center space-x-2">
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+            <div className="mt-4 p-4 rounded-xl bg-rose-soft border border-rose-line text-rose-ink text-xs flex items-center space-x-2">
+              <AlertCircle className="w-4 h-4 text-rose-ink shrink-0" />
               <span>{errorMsg}</span>
             </div>
           )}
@@ -501,8 +493,8 @@ export function App() {
 
         {/* Honest notice for transforms / generation limits */}
         {currentReviewer && infoMsg && (
-          <div className="mb-4 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start space-x-2">
-            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+          <div className="mb-4 p-4 rounded-xl bg-amber-soft border border-amber-line text-amber-ink text-xs flex items-start space-x-2">
+            <AlertCircle className="w-4 h-4 text-amber-ink shrink-0 mt-0.5" />
             <span>{infoMsg}</span>
           </div>
         )}
@@ -524,14 +516,14 @@ export function App() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 py-6 px-4 text-center text-xs text-slate-400 no-print">
+      <footer className="bg-surface border-t border-border py-6 px-4 text-center text-xs text-ink-muted no-print">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <p>
             StudySnap AI • Built for high-yield exam preparation.
           </p>
           <div className="flex items-center space-x-4">
-            <span className="flex items-center space-x-1 text-slate-500">
-              <Shield className="w-3.5 h-3.5 text-indigo-500" />
+            <span className="flex items-center space-x-1 text-ink-soft">
+              <Shield className="w-3.5 h-3.5 text-accent-ink" />
               <span>Source-grounded generation</span>
             </span>
           </div>

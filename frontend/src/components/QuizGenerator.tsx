@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { HelpCircle, Play, X } from 'lucide-react';
 import type { QuizConfig } from '../types/reviewer';
 
@@ -18,6 +18,15 @@ export const QuizGenerator: React.FC<QuizGeneratorProps> = ({
   const [questionCount, setQuestionCount] = useState<number>(10);
   const [questionType, setQuestionType] = useState<QuizConfig['question_type']>('mixed');
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -30,21 +39,27 @@ export const QuizGenerator: React.FC<QuizGeneratorProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-      <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 relative animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="quiz-generator-dialog-title"
+        className="bg-surface rounded-3xl max-w-md w-full p-6 shadow-2xl border border-border relative animate-in fade-in zoom-in-95 duration-200"
+      >
+        <div className="flex items-center justify-between pb-4 border-b border-border">
           <div className="flex items-center space-x-2.5">
-            <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-accent-soft text-accent-ink flex items-center justify-center">
               <HelpCircle className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-900 text-lg">Generate Quiz</h3>
-              <p className="text-xs text-slate-500">Practice questions based exclusively on this reviewer</p>
+              <h3 id="quiz-generator-dialog-title" className="font-bold text-ink text-lg">Generate Quiz</h3>
+              <p className="text-xs text-ink-muted">Practice questions based exclusively on this reviewer</p>
             </div>
           </div>
           <button
             onClick={onClose}
             disabled={isGenerating}
-            className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors"
+            aria-label="Close quiz generator"
+            className="p-1.5 text-ink-muted hover:text-ink-soft rounded-lg hover:bg-sunken transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -53,7 +68,7 @@ export const QuizGenerator: React.FC<QuizGeneratorProps> = ({
         <form onSubmit={handleSubmit} className="mt-5 space-y-5">
           {/* Question Count Selector */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-semibold text-ink-soft uppercase tracking-wider mb-2">
               Number of Questions
             </label>
             <div className="grid grid-cols-4 gap-2">
@@ -62,10 +77,11 @@ export const QuizGenerator: React.FC<QuizGeneratorProps> = ({
                   key={count}
                   type="button"
                   onClick={() => setQuestionCount(count)}
+                  aria-pressed={questionCount === count}
                   className={`py-2 text-sm font-semibold rounded-xl border transition-all ${
                     questionCount === count
-                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                      ? 'bg-accent text-white border-accent shadow-sm'
+                      : 'bg-sunken text-ink-soft border-border hover:bg-border/70'
                   }`}
                 >
                   {count}
@@ -76,7 +92,7 @@ export const QuizGenerator: React.FC<QuizGeneratorProps> = ({
 
           {/* Question Type Selector */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-semibold text-ink-soft uppercase tracking-wider mb-2">
               Question Format
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -90,16 +106,17 @@ export const QuizGenerator: React.FC<QuizGeneratorProps> = ({
                   key={t.id}
                   type="button"
                   onClick={() => setQuestionType(t.id as any)}
+                  aria-pressed={questionType === t.id}
                   className={`p-3 text-left rounded-xl border transition-all ${
                     questionType === t.id
-                      ? 'bg-indigo-50/70 border-indigo-500 ring-1 ring-indigo-500'
-                      : 'bg-white border-slate-200 hover:bg-slate-50'
+                      ? 'bg-accent-soft/70 border-accent ring-1 ring-accent'
+                      : 'bg-surface border-border hover:bg-sunken'
                   }`}
                 >
-                  <p className={`text-xs font-bold ${questionType === t.id ? 'text-indigo-900' : 'text-slate-800'}`}>
+                  <p className={`text-xs font-bold ${questionType === t.id ? 'text-accent-ink' : 'text-ink'}`}>
                     {t.label}
                   </p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">{t.desc}</p>
+                  <p className="text-[11px] text-ink-muted mt-0.5">{t.desc}</p>
                 </button>
               ))}
             </div>
@@ -109,7 +126,7 @@ export const QuizGenerator: React.FC<QuizGeneratorProps> = ({
             <button
               type="submit"
               disabled={isGenerating}
-              className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-2xl shadow-md hover:shadow-lg transition-all flex items-center justify-center space-x-2 disabled:opacity-50"
+              className="w-full py-3 px-4 bg-accent hover:bg-accent-hover text-white font-semibold rounded-2xl shadow-md hover:shadow-lg transition-all flex items-center justify-center space-x-2 disabled:opacity-50"
             >
               {isGenerating ? (
                 <>

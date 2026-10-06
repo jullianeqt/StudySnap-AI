@@ -185,19 +185,20 @@ export const Reviewer: React.FC<ReviewerProps> = ({
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6 pb-20">
       {/* Control Bar: Difficulty, Actions, Search */}
-      <div className="sticky top-4 z-40 bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/80 p-3 shadow-sm no-print space-y-3">
+      <div className="sticky top-4 z-40 bg-surface/90 backdrop-blur-md rounded-2xl border border-border/80 p-3 shadow-sm no-print space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           {/* Compression Level Selector */}
-          <div className="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl">
+          <div className="flex items-center space-x-1 bg-sunken p-1 rounded-xl">
             {(['quick', 'standard', 'detailed'] as const).map((level) => (
               <button
                 key={level}
                 type="button"
                 onClick={() => onSelectCompression(level)}
+                aria-pressed={(record.compression || 'standard') === level}
                 className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all capitalize ${
                   (record.compression || 'standard') === level
-                    ? 'bg-white text-indigo-700 shadow-2xs'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-surface text-accent-ink shadow-2xs'
+                    : 'text-ink-soft hover:text-ink'
                 }`}
               >
                 {level === 'quick' ? '✂️ Quick' : level === 'standard' ? '⚖️ Standard' : '📚 Detailed'}
@@ -211,7 +212,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
               type="button"
               disabled={isTransforming}
               onClick={() => onTransform('make_simpler')}
-              className="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-colors inline-flex items-center space-x-1"
+              className="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-accent-soft text-accent-ink hover:bg-accent-line transition-colors inline-flex items-center space-x-1"
               title="Rewrite difficult explanations in simpler language"
             >
               <Wand2 className="w-3.5 h-3.5" />
@@ -222,7 +223,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
               type="button"
               disabled={isTransforming}
               onClick={() => onTransform('eli5')}
-              className="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 transition-colors inline-flex items-center space-x-1"
+              className="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-violet-soft text-violet-ink hover:bg-violet-line transition-colors inline-flex items-center space-x-1"
               title="Explain like I'm new to this without changing meaning"
             >
               <Sparkles className="w-3.5 h-3.5" />
@@ -232,7 +233,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
             <button
               type="button"
               onClick={onOpenQuizGenerator}
-              className="px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-all shadow-xs inline-flex items-center space-x-1.5"
+              className="px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald text-white hover:bg-emerald-hover transition-all shadow-xs inline-flex items-center space-x-1.5"
             >
               <HelpCircle className="w-3.5 h-3.5" />
               <span>Practice Quiz</span>
@@ -244,17 +245,19 @@ export const Reviewer: React.FC<ReviewerProps> = ({
             <button
               type="button"
               onClick={handleCopyReviewer}
-              className="p-2 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-xl transition-colors"
+              className="p-2 text-ink-soft hover:text-accent-ink hover:bg-sunken rounded-xl transition-colors"
               title="Copy Reviewer"
+              aria-label="Copy reviewer as text"
             >
-              {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+              {copied ? <Check className="w-4 h-4 text-emerald-ink" /> : <Copy className="w-4 h-4" />}
             </button>
             <button
               type="button"
               onClick={handleExportPdf}
               disabled={isExporting}
-              className="p-2 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-xl transition-colors disabled:opacity-50"
+              className="p-2 text-ink-soft hover:text-accent-ink hover:bg-sunken rounded-xl transition-colors disabled:opacity-50"
               title="Download detailed PDF"
+              aria-label="Download reviewer as PDF"
             >
               <Download className={`w-4 h-4 ${isExporting ? 'animate-pulse' : ''}`} />
             </button>
@@ -262,14 +265,14 @@ export const Reviewer: React.FC<ReviewerProps> = ({
         </div>
 
         {/* Section Jump Nav & Search Filter */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border">
           <div className="flex items-center space-x-1 overflow-x-auto pb-1 max-w-full sm:max-w-xl text-xs">
             {navSections.map((sec) => (
               <button
                 key={sec.id}
                 type="button"
                 onClick={() => scrollToSection(sec.id)}
-                className="px-2.5 py-1 rounded-md text-slate-600 hover:text-indigo-600 hover:bg-slate-100 whitespace-nowrap font-medium transition-colors"
+                className="px-2.5 py-1 rounded-md text-ink-soft hover:text-accent-ink hover:bg-sunken whitespace-nowrap font-medium transition-colors"
               >
                 {sec.label}
               </button>
@@ -278,18 +281,20 @@ export const Reviewer: React.FC<ReviewerProps> = ({
 
           {/* Quick Search */}
           <div className="relative w-full sm:w-48">
-            <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-ink-muted" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search reviewer sections"
               placeholder="Search reviewer..."
-              className="w-full pl-8 pr-3 py-1 text-xs rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-indigo-400"
+              className="w-full pl-8 pr-3 py-1 text-xs rounded-lg border border-border bg-sunken focus:bg-surface focus:outline-none focus:border-accent"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2 top-1.5 text-slate-400 hover:text-slate-600 text-xs"
+                aria-label="Clear search"
+                className="absolute right-2 top-1.5 text-ink-muted hover:text-ink-soft text-xs"
               >
                 ✕
               </button>
@@ -299,33 +304,33 @@ export const Reviewer: React.FC<ReviewerProps> = ({
       </div>
 
       {/* Reviewer Header Card */}
-      <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '0ms' } as React.CSSProperties}>
+      <div className="bg-surface rounded-3xl p-8 border border-border shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '0ms' } as React.CSSProperties}>
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-          <span className="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
+          <span className="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-accent-soft text-accent-ink border border-accent-line">
             {data.subject || "Academic Study Reviewer"}
           </span>
 
-          <div className="flex items-center space-x-3 text-xs text-slate-400">
+          <div className="flex items-center space-x-3 text-xs text-ink-muted">
             <span>{record.date_created}</span>
             <span>•</span>
             <span>{record.pages_processed} {record.pages_processed === 1 ? 'page/slide' : 'pages/slides'}</span>
             <span>•</span>
-            <span className="text-indigo-600 font-semibold">{record.ai_provider || 'Source-grounded generation'}</span>
+            <span className="text-accent-ink font-semibold">{record.ai_provider || 'Source-grounded generation'}</span>
           </div>
         </div>
 
-        <h1 className="text-2xl md:text-3xl font-black text-slate-900 leading-tight">
+        <h1 className="text-2xl md:text-3xl font-black text-ink leading-tight">
           {data.lesson_title || record.title}
         </h1>
-        <p className="text-xs text-slate-500 mt-1">
+        <p className="text-xs text-ink-muted mt-1">
           Source-grounded generation • {record.generation_meta?.sections_generated ?? '—'} of 10 sections supported by source • StudySnap AI
         </p>
 
         {/* Extraction / generation accuracy notices */}
         {notices.length > 0 && (
-          <div className="mt-4 p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-xs space-y-1">
+          <div className="mt-4 p-3 bg-amber-soft/70 border border-amber-line rounded-xl text-xs space-y-1" role="status">
             {notices.map((notice, idx) => (
-              <p key={idx} className="text-amber-900 leading-relaxed">
+              <p key={idx} className="text-amber-ink leading-relaxed">
                 {notice}
               </p>
             ))}
@@ -333,9 +338,9 @@ export const Reviewer: React.FC<ReviewerProps> = ({
         )}
 
         {starredTerms.size > 0 && (
-          <div className="mt-4 p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-xs flex items-center space-x-2">
-            <Star className="w-4 h-4 text-amber-500 fill-amber-400" />
-            <span className="font-semibold text-amber-900">
+          <div className="mt-4 p-3 bg-amber-soft/70 border border-amber-line rounded-xl text-xs flex items-center space-x-2">
+            <Star className="w-4 h-4 text-amber-ink fill-amber-400" />
+            <span className="font-semibold text-amber-ink">
               {starredTerms.size} Starred Term{starredTerms.size > 1 ? 's' : ''} saved for priority review
             </span>
           </div>
@@ -344,21 +349,21 @@ export const Reviewer: React.FC<ReviewerProps> = ({
 
       {/* SECTION 1: QUICK REVIEW */}
       {quickReview.length > 0 && (
-      <section id="quick-review" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '70ms' } as React.CSSProperties}>
-        <div className="flex items-center space-x-2.5 mb-4 pb-2 border-b border-slate-100">
-          <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs">
+      <section id="quick-review" className="bg-surface rounded-3xl p-6 md:p-8 border border-border shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '70ms' } as React.CSSProperties}>
+        <div className="flex items-center space-x-2.5 mb-4 pb-2 border-b border-border">
+          <div className="w-7 h-7 rounded-lg bg-blue-soft text-blue-ink flex items-center justify-center font-bold text-xs">
             1
           </div>
-          <h3 className="text-lg font-bold text-slate-900 uppercase tracking-wide">
+          <h3 className="text-lg font-bold text-ink uppercase tracking-wide">
             Quick Review
           </h3>
-          <span className="text-xs text-slate-400 ml-auto">{quickReview.length} source-backed points</span>
+          <span className="text-xs text-ink-muted ml-auto">{quickReview.length} source-backed points</span>
         </div>
 
         <ul className="space-y-2.5">
           {quickReview.map((point, idx) => (
-            <li key={idx} className="flex items-start text-sm text-slate-700 space-x-3">
-              <span className="w-5 h-5 rounded-full bg-blue-50 text-blue-600 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+            <li key={idx} className="flex items-start text-sm text-ink-soft space-x-3">
+              <span className="w-5 h-5 rounded-full bg-blue-soft text-blue-ink text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
                 {idx + 1}
               </span>
               <span className="leading-relaxed font-medium">{point}</span>
@@ -370,17 +375,17 @@ export const Reviewer: React.FC<ReviewerProps> = ({
 
       {/* SECTION 2: KEYWORDS */}
       {keywords.length > 0 && (
-      <section id="keywords" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '140ms' } as React.CSSProperties}>
-        <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+      <section id="keywords" className="bg-surface rounded-3xl p-6 md:p-8 border border-border shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '140ms' } as React.CSSProperties}>
+        <div className="flex items-center justify-between mb-4 pb-2 border-b border-border">
           <div className="flex items-center space-x-2.5">
-            <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">
+            <div className="w-7 h-7 rounded-lg bg-accent-soft text-accent-ink flex items-center justify-center font-bold text-xs">
               2
             </div>
-            <h3 className="text-lg font-bold text-slate-900 uppercase tracking-wide">
+            <h3 className="text-lg font-bold text-ink uppercase tracking-wide">
               Keywords & Definitions
             </h3>
           </div>
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-ink-muted">
             {filteredKeywords.length} terms {searchQuery && '(filtered)'}
           </span>
         </div>
@@ -400,17 +405,17 @@ export const Reviewer: React.FC<ReviewerProps> = ({
 
       {/* SECTION 3: CORE CONCEPTS */}
       {concepts.length > 0 && (
-      <section id="concepts" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '210ms' } as React.CSSProperties}>
-        <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+      <section id="concepts" className="bg-surface rounded-3xl p-6 md:p-8 border border-border shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '210ms' } as React.CSSProperties}>
+        <div className="flex items-center justify-between mb-4 pb-2 border-b border-border">
           <div className="flex items-center space-x-2.5">
-            <div className="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-xs">
+            <div className="w-7 h-7 rounded-lg bg-violet-soft text-violet-ink flex items-center justify-center font-bold text-xs">
               3
             </div>
-            <h3 className="text-lg font-bold text-slate-900 uppercase tracking-wide">
+            <h3 className="text-lg font-bold text-ink uppercase tracking-wide">
               Core Concepts
             </h3>
           </div>
-          <span className="text-xs text-slate-400">Bite-sized bullet clarity</span>
+          <span className="text-xs text-ink-muted">Bite-sized bullet clarity</span>
         </div>
 
         <div className="space-y-3.5">
@@ -423,15 +428,15 @@ export const Reviewer: React.FC<ReviewerProps> = ({
 
       {/* SECTION 4: MUST REMEMBER */}
       {mustRemember.length > 0 && (
-      <section id="must-remember" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '280ms' } as React.CSSProperties}>
-        <div className="flex items-center space-x-2.5 mb-4 pb-2 border-b border-slate-100">
-          <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-xs">
+      <section id="must-remember" className="bg-surface rounded-3xl p-6 md:p-8 border border-border shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '280ms' } as React.CSSProperties}>
+        <div className="flex items-center space-x-2.5 mb-4 pb-2 border-b border-border">
+          <div className="w-7 h-7 rounded-lg bg-amber-soft text-amber-ink flex items-center justify-center font-bold text-xs">
             4
           </div>
-          <h3 className="text-lg font-bold text-slate-900 uppercase tracking-wide">
+          <h3 className="text-lg font-bold text-ink uppercase tracking-wide">
             Must Remember
           </h3>
-          <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full ml-auto">
+          <span className="text-xs font-semibold text-amber-ink bg-amber-soft px-2.5 py-0.5 rounded-full ml-auto">
             ⚡ High-Probability Exam Items
           </span>
         </div>
@@ -440,10 +445,10 @@ export const Reviewer: React.FC<ReviewerProps> = ({
           {mustRemember.map((item, idx) => (
             <div
               key={idx}
-              className="p-4 rounded-xl border border-amber-200 bg-amber-50/40 flex items-start space-x-3 shadow-2xs"
+              className="p-4 rounded-xl border border-amber-line bg-amber-soft/40 flex items-start space-x-3 shadow-2xs"
             >
-              <Zap className="w-4 h-4 text-amber-600 shrink-0 mt-0.5 fill-amber-400" />
-              <p className="text-xs md:text-sm text-slate-800 leading-relaxed font-semibold">
+              <Zap className="w-4 h-4 text-amber-ink shrink-0 mt-0.5 fill-amber-400" />
+              <p className="text-xs md:text-sm text-ink leading-relaxed font-semibold">
                 {item}
               </p>
             </div>
@@ -454,12 +459,12 @@ export const Reviewer: React.FC<ReviewerProps> = ({
 
       {/* SECTION 5: COMPARE */}
       {comparisons.length > 0 && (
-        <section id="compare" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '350ms' } as React.CSSProperties}>
-          <div className="flex items-center space-x-2.5 mb-4 pb-2 border-b border-slate-100">
-            <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xs">
+        <section id="compare" className="bg-surface rounded-3xl p-6 md:p-8 border border-border shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '350ms' } as React.CSSProperties}>
+          <div className="flex items-center space-x-2.5 mb-4 pb-2 border-b border-border">
+            <div className="w-7 h-7 rounded-lg bg-emerald-soft text-emerald-ink flex items-center justify-center font-bold text-xs">
               5
             </div>
-            <h3 className="text-lg font-bold text-slate-900 uppercase tracking-wide">
+            <h3 className="text-lg font-bold text-ink uppercase tracking-wide">
               Compare Similar Concepts
             </h3>
           </div>
@@ -470,12 +475,12 @@ export const Reviewer: React.FC<ReviewerProps> = ({
 
       {/* SECTION 6: PROCESS / STEPS */}
       {processes.length > 0 && (
-        <section id="steps" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '420ms' } as React.CSSProperties}>
-          <div className="flex items-center space-x-2.5 mb-4 pb-2 border-b border-slate-100">
-            <div className="w-7 h-7 rounded-lg bg-cyan-50 text-cyan-600 flex items-center justify-center font-bold text-xs">
+        <section id="steps" className="bg-surface rounded-3xl p-6 md:p-8 border border-border shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '420ms' } as React.CSSProperties}>
+          <div className="flex items-center space-x-2.5 mb-4 pb-2 border-b border-border">
+            <div className="w-7 h-7 rounded-lg bg-cyan-soft text-cyan-ink flex items-center justify-center font-bold text-xs">
               6
             </div>
-            <h3 className="text-lg font-bold text-slate-900 uppercase tracking-wide">
+            <h3 className="text-lg font-bold text-ink uppercase tracking-wide">
               Process / Step-by-Step
             </h3>
           </div>
@@ -483,7 +488,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
           <div className="space-y-6">
             {processes.map((proc, pIdx) => (
               <div key={pIdx} className="space-y-3">
-                <h4 className="font-bold text-slate-800 text-sm">
+                <h4 className="font-bold text-ink-soft text-sm">
                   {proc.process_title}
                 </h4>
 
@@ -491,16 +496,16 @@ export const Reviewer: React.FC<ReviewerProps> = ({
                   {proc.steps.map((step) => (
                     <div
                       key={step.step_number}
-                      className="flex items-start space-x-3.5 p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white transition-colors"
+                      className="flex items-start space-x-3.5 p-3.5 rounded-xl border border-border bg-sunken/50 hover:bg-surface transition-colors"
                     >
-                      <div className="w-6 h-6 rounded-lg bg-cyan-600 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                      <div className="w-6 h-6 rounded-lg bg-cyan text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                         {step.step_number}
                       </div>
                       <div>
-                        <p className="font-bold text-slate-900 text-xs md:text-sm">
+                        <p className="font-bold text-ink text-xs md:text-sm">
                           {step.title}
                         </p>
-                        <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                        <p className="text-xs text-ink-soft mt-0.5 leading-relaxed">
                           {step.description}
                         </p>
                       </div>
@@ -515,12 +520,12 @@ export const Reviewer: React.FC<ReviewerProps> = ({
 
       {/* SECTION 7: FORMULAS / RULES */}
       {formulas.length > 0 && (
-        <section id="formulas" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '490ms' } as React.CSSProperties}>
-          <div className="flex items-center space-x-2.5 mb-4 pb-2 border-b border-slate-100">
-            <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xs">
+        <section id="formulas" className="bg-surface rounded-3xl p-6 md:p-8 border border-border shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '490ms' } as React.CSSProperties}>
+          <div className="flex items-center space-x-2.5 mb-4 pb-2 border-b border-border">
+            <div className="w-7 h-7 rounded-lg bg-emerald-soft text-emerald-ink flex items-center justify-center font-bold text-xs">
               7
             </div>
-            <h3 className="text-lg font-bold text-slate-900 uppercase tracking-wide">
+            <h3 className="text-lg font-bold text-ink uppercase tracking-wide">
               Formulas & Rules
             </h3>
           </div>
@@ -535,29 +540,29 @@ export const Reviewer: React.FC<ReviewerProps> = ({
 
       {/* SECTION 8: EXAMPLES */}
       {examples.length > 0 && (
-        <section id="examples" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '560ms' } as React.CSSProperties}>
-          <div className="flex items-center space-x-2.5 mb-4 pb-2 border-b border-slate-100">
-            <div className="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-xs">
+        <section id="examples" className="bg-surface rounded-3xl p-6 md:p-8 border border-border shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '560ms' } as React.CSSProperties}>
+          <div className="flex items-center space-x-2.5 mb-4 pb-2 border-b border-border">
+            <div className="w-7 h-7 rounded-lg bg-rose-soft text-rose-ink flex items-center justify-center font-bold text-xs">
               8
             </div>
-            <h3 className="text-lg font-bold text-slate-900 uppercase tracking-wide">
+            <h3 className="text-lg font-bold text-ink uppercase tracking-wide">
               High-Yield Examples
             </h3>
           </div>
 
           <div className="space-y-3.5">
             {examples.map((ex, exIdx) => (
-              <div key={exIdx} className="p-4 rounded-xl border border-slate-200 bg-slate-50/40">
-                <span className="font-bold text-slate-900 text-xs md:text-sm">
+              <div key={exIdx} className="p-4 rounded-xl border border-border bg-sunken/40">
+                <span className="font-bold text-ink text-xs md:text-sm">
                   {ex.concept}
                 </span>
-                <p className="mt-1 text-xs md:text-sm text-slate-700 bg-white p-3 rounded-lg border border-slate-200">
-                  <span className="font-semibold text-rose-600">Scenario: </span>
+                <p className="mt-1 text-xs md:text-sm text-ink-soft bg-surface p-3 rounded-lg border border-border">
+                  <span className="font-semibold text-rose-ink">Scenario: </span>
                   {ex.example}
                 </p>
                 {ex.explanation && (
-                  <p className="mt-2 text-xs text-slate-500">
-                    <span className="font-semibold text-slate-700">Why it matters: </span>
+                  <p className="mt-2 text-xs text-ink-muted">
+                    <span className="font-semibold text-ink-soft">Why it matters: </span>
                     {ex.explanation}
                   </p>
                 )}
@@ -569,20 +574,20 @@ export const Reviewer: React.FC<ReviewerProps> = ({
 
       {/* SECTION 9: POSSIBLE QUIZ POINTS */}
       {quizPoints.length > 0 && (
-        <section id="quiz-points" className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '630ms' } as React.CSSProperties}>
-          <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+        <section id="quiz-points" className="bg-surface rounded-3xl p-6 md:p-8 border border-border shadow-xs reviewer-card print-page-break reveal-section" style={{ '--section-delay': '630ms' } as React.CSSProperties}>
+          <div className="flex items-center justify-between mb-4 pb-2 border-b border-border">
             <div className="flex items-center space-x-2.5">
-              <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">
+              <div className="w-7 h-7 rounded-lg bg-accent-soft text-accent-ink flex items-center justify-center font-bold text-xs">
                 9
               </div>
-              <h3 className="text-lg font-bold text-slate-900 uppercase tracking-wide">
+              <h3 className="text-lg font-bold text-ink uppercase tracking-wide">
                 Possible Quiz Points
               </h3>
             </div>
             <button
               type="button"
               onClick={onOpenQuizGenerator}
-              className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:underline inline-flex items-center space-x-1"
+              className="text-xs font-semibold text-accent-ink hover:text-accent-hover hover:underline inline-flex items-center space-x-1"
             >
               <span>Test yourself now</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -593,13 +598,13 @@ export const Reviewer: React.FC<ReviewerProps> = ({
             {quizPoints.map((qp, qpIdx) => (
               <div
                 key={qpIdx}
-                className="p-4 rounded-xl border border-indigo-100 bg-indigo-50/30 flex items-start space-x-3"
+                className="p-4 rounded-xl border border-accent-line bg-accent-soft/30 flex items-start space-x-3"
               >
-                <HelpCircle className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+                <HelpCircle className="w-4 h-4 text-accent-ink shrink-0 mt-0.5" />
                 <div className="text-xs md:text-sm space-y-1">
-                  <p className="font-bold text-slate-900">{qp.question_clue}</p>
-                  <p className="text-slate-600 font-medium">
-                    <span className="text-indigo-600 font-bold">Key Fact: </span>
+                  <p className="font-bold text-ink">{qp.question_clue}</p>
+                  <p className="text-ink-soft font-medium">
+                    <span className="text-accent-ink font-bold">Key Fact: </span>
                     {qp.key_fact}
                   </p>
                 </div>
@@ -611,7 +616,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
 
       {/* SECTION 10: ONE-MINUTE REVIEW */}
       {oneMinuteReview.length > 0 && (
-      <section id="one-minute" className="bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-3xl p-8 shadow-lg reviewer-card print-page-break reveal-section" style={{ '--section-delay': '700ms' } as React.CSSProperties}>
+      <section id="one-minute" className="bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-3xl p-8 shadow-lg reviewer-card print-page-break print-light-panel reveal-section" style={{ '--section-delay': '700ms' } as React.CSSProperties}>
         <div className="flex items-center justify-between mb-4 pb-3 border-b border-indigo-700/50">
           <div className="flex items-center space-x-2.5">
             <div className="w-7 h-7 rounded-lg bg-indigo-500/30 text-indigo-300 flex items-center justify-center font-bold text-xs">
