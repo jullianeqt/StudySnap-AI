@@ -2,9 +2,12 @@
 
 import io
 import unittest
+from unittest.mock import patch
+from types import SimpleNamespace
 
 import _support  # noqa: F401
 import app as app_module
+import ai_engine
 
 LESSON_TEXT = """\
 Semaphores in Operating Systems:
@@ -72,6 +75,39 @@ class ApiEndpointTests(unittest.TestCase):
         response = self.client.post("/api/generate-reviewer", json={"text": "   "})
         self.assertEqual(response.status_code, 400)
         self.assertIn("error", response.get_json())
+
+    def test_ai_failure_falls_back_for_text(self):
+        with patch.object(app_module, 'generate_reviewer_gemini', side_effect=RuntimeError('provider unavailable')):
+            response = self.client.post('/api/generate-reviewer', json={
+                'text': LESSON_TEXT, 'api_key': 'test-key',
+            })
+        self.assertEqual(response.status_code, 200)
+        record = response.get_json()['data']
+        self.assertEqual(record['ai_provider'], 'local_extractive_fallback')
+        self.assertTrue(record['reviewer']['quick_review'])
+        self.assertTrue(any('AI provider could not' in warning for warning in record['generation_meta']['warnings']))
+
+    def test_unusable_ai_response_activates_text_fallback(self):
+        for content in ('not JSON', '{}', '', '[]'):
+            with self.subTest(content=content), patch('google.genai.Client'), patch.object(
+                ai_engine, '_generate_reviewer_content', return_value=SimpleNamespace(text=content)
+            ):
+                response = self.client.post('/api/generate-reviewer', json={
+                    'text': LESSON_TEXT, 'api_key': 'test-key',
+                })
+                self.assertEqual(response.status_code, 200)
+                record = response.get_json()['data']
+                self.assertEqual(record['ai_provider'], 'local_extractive_fallback')
+                self.assertTrue(record['reviewer']['quick_review'])
+
+    def test_ai_failure_does_not_save_empty_image_reviewer(self):
+        with patch.object(app_module, 'generate_reviewer_gemini', side_effect=RuntimeError('provider unavailable')), patch.object(app_module, 'save_history') as save:
+            response = self.client.post('/api/generate-reviewer', json={
+                'image_b64': 'aGVsbG8=', 'mime_type': 'image/png', 'api_key': 'test-key',
+            })
+        self.assertEqual(response.status_code, 502)
+        self.assertIn('could not analyze', response.get_json()['error'])
+        save.assert_not_called()
 
     def test_image_without_api_key_is_rejected_honestly(self):
         response = self.client.post(

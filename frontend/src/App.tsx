@@ -12,14 +12,10 @@ import { ReviewerHistory } from './components/ReviewerHistory';
 import { ApiKeyModal } from './components/ApiKeyModal';
 import { ThemeMenu } from './components/ThemeMenu';
 import { useTheme } from './theme';
+import { getApiUrl, requestJson } from './api';
 import type {
   ReviewerRecord, QuizQuestion, QuizConfig, ExtractionResult, ExtractionQuality,
 } from './types/reviewer';
-
-const getApiUrl = (path: string) => {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '');
-  return `${baseUrl || ''}${path}`;
-};
 
 export function App() {
   const { preference: theme, setPreference: setTheme } = useTheme();
@@ -106,17 +102,11 @@ export function App() {
         const formData = new FormData();
         formData.append('file', selectedFile);
 
-        const extractRes = await fetch(getApiUrl('/api/extract'), {
+        const extractData = await requestJson<ExtractionResult>('/api/extract', {
           method: 'POST',
           body: formData,
         });
 
-        if (!extractRes.ok) {
-          const errData = await extractRes.json().catch(() => ({}));
-          throw new Error(errData.error || 'Failed to extract content from uploaded file.');
-        }
-
-        const extractData: ExtractionResult = await extractRes.json();
         extractedText = extractData.text || '';
         imageB64 = extractData.image_b64;
         mimeType = extractData.mime_type;
@@ -141,7 +131,7 @@ export function App() {
         headers['X-Gemini-Key'] = apiKey;
       }
 
-      const generateRes = await fetch(getApiUrl('/api/generate-reviewer'), {
+      const result = await requestJson<{ success: boolean; data: ReviewerRecord }>('/api/generate-reviewer', {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -159,12 +149,6 @@ export function App() {
         }),
       });
 
-      if (!generateRes.ok) {
-        const errData = await generateRes.json().catch(() => ({}));
-        throw new Error(errData.error || 'Failed to generate study reviewer.');
-      }
-
-      const result = await generateRes.json();
       if (result.success && result.data) {
         setCurrentReviewer(result.data);
         fetchHistory();

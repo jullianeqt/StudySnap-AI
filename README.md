@@ -58,6 +58,7 @@ Double-click `start_studysnap.bat` in the root folder. It will launch both the b
 #### 1. Backend Service
 ```bash
 cd backend
+python -m pip install -r requirements.txt
 python app.py
 ```
 *Backend runs on `http://localhost:5001`.*
@@ -68,6 +69,10 @@ cd frontend
 npm run dev
 ```
 *Frontend runs on `http://localhost:5173`.*
+
+The Windows launcher uses the root `.venv` Python environment, installs missing backend dependencies, and checks `/api/health` before starting the frontend. If you start the backend manually with a different Python installation, install the requirements into that same installation first.
+
+For a Vercel frontend and Railway backend, set `VITE_API_BASE_URL` in the frontend build environment to the actual Railway HTTPS origin (without `/api`), then rebuild/redeploy the frontend. The Vercel configuration serves the frontend only; it does not host Flask. Local development and `npm run preview` proxy `/api` to `http://localhost:5001` when no base URL is configured.
 
 ---
 

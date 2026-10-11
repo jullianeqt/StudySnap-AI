@@ -802,7 +802,10 @@ Source Material:
 
     response = _generate_reviewer_content(client, contents, REVIEWER_SYSTEM_PROMPT)
     data = _parse_json_value(response.text, {})
-    return normalize_reviewer(data)
+    reviewer = normalize_reviewer(data)
+    if not any(reviewer.get(section) for section in REVIEWER_SECTIONS):
+        raise ValueError("The AI provider returned no usable reviewer content.")
+    return reviewer
 
 
 def generate_quiz_gemini(

@@ -465,6 +465,15 @@ def generate_reviewer():
             ai_provider = "gemini-2.5-flash"
         except Exception as e:
             app.logger.warning(f"Gemini generation failed: {e}. Falling back to the offline extractive engine.")
+            if image_b64 and not text.strip():
+                return jsonify({
+                    "error": "The AI vision provider could not analyze this image. Check your "
+                             "Gemini API key and quota, then retry, or paste the lesson text.",
+                }), 502
+            generation_warnings.append(
+                "The AI provider could not generate a reviewer. Used the offline extractive "
+                "engine instead; check your Gemini API key and quota if this persists."
+            )
             reviewer_result = local_fallback_synthesizer(
                 text=text,
                 filename=filename,
