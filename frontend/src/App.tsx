@@ -13,6 +13,7 @@ import { ApiKeyModal } from './components/ApiKeyModal';
 import { ThemeMenu } from './components/ThemeMenu';
 import { useTheme } from './theme';
 import { getApiUrl, requestJson } from './api';
+import { cleanRecord, cleanReviewer, cleanQuiz } from './contentFilter';
 import type {
   ReviewerRecord, QuizQuestion, QuizConfig, ExtractionResult, ExtractionQuality,
 } from './types/reviewer';
@@ -60,7 +61,7 @@ export function App() {
       if (res.ok) {
         const data = await res.json();
         if (data.history) {
-          setHistoryList(data.history);
+          setHistoryList(data.history.map(cleanRecord));
         }
       }
     } catch (e) {
@@ -151,7 +152,7 @@ export function App() {
       });
 
       if (result.success && result.data) {
-        setCurrentReviewer(result.data);
+        setCurrentReviewer(cleanRecord(result.data));
         fetchHistory();
         // Scroll to reviewer view smoothly
         setTimeout(() => {
@@ -195,7 +196,9 @@ export function App() {
 
       const data = await res.json();
       if (data.questions && data.questions.length > 0) {
-        setQuizQuestions(data.questions);
+        const questions = cleanQuiz(data.questions);
+        if (!questions.length) throw new Error('No valid academic quiz questions remain after filtering.');
+        setQuizQuestions(questions);
         setIsQuizGenOpen(false);
         setIsQuizModalOpen(true);
         if (data.message) {
@@ -242,7 +245,7 @@ export function App() {
       if (data.reviewer) {
         setCurrentReviewer({
           ...currentReviewer,
-          reviewer: data.reviewer,
+          reviewer: cleanReviewer(data.reviewer),
         });
       }
       // Honest disclosure when the AI engine could not (or did not) rewrite the content.
@@ -570,7 +573,7 @@ export function App() {
         history={historyList}
         onSelectReviewer={(rec) => {
           setTargetSearchTopic('');
-          setCurrentReviewer(rec);
+          setCurrentReviewer(cleanRecord(rec));
           window.scrollTo({ top: 380, behavior: 'smooth' });
         }}
         onClearHistory={handleClearHistory}

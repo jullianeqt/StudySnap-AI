@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { Trophy, CheckCircle, XCircle, RefreshCw, ArrowLeft, AlertTriangle } from 'lucide-react';
 import type { QuizQuestion } from '../types/reviewer';
+import { cleanQuiz, cleanText } from '../contentFilter';
 
 interface QuizResultsProps {
   questions: QuizQuestion[];
@@ -11,11 +12,13 @@ interface QuizResultsProps {
 }
 
 export const QuizResults: React.FC<QuizResultsProps> = ({
-  questions,
-  userAnswers,
+  questions: rawQuestions,
+  userAnswers: rawAnswers,
   onRetake,
   onBackToReviewer,
 }) => {
+  const questions = cleanQuiz(rawQuestions);
+  const userAnswers = Object.fromEntries(Object.entries(rawAnswers).map(([id, answer]) => [id, cleanText(answer)]));
   let correctCount = 0;
   const reviewTopicsSet = new Set<string>();
 
@@ -32,7 +35,7 @@ export const QuizResults: React.FC<QuizResultsProps> = ({
   });
 
   const total = questions.length;
-  const percentage = Math.round((correctCount / total) * 100);
+  const percentage = total ? Math.round((correctCount / total) * 100) : 0;
   const reviewTopics = Array.from(reviewTopicsSet);
 
   useEffect(() => {

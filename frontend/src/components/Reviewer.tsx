@@ -19,6 +19,7 @@ import { SourceBadge } from './SourceBadge';
 import { SourceViewer } from './SourceViewer';
 import { Highlight } from './Highlight';
 import { StudyMode } from './StudyMode';
+import { cleanRecord } from '../contentFilter';
 
 interface ReviewerProps {
   record: ReviewerRecord;
@@ -31,7 +32,7 @@ interface ReviewerProps {
 }
 
 export const Reviewer: React.FC<ReviewerProps> = ({
-  record,
+  record: rawRecord,
   onOpenQuizGenerator,
   onTransform,
   onExportPdf,
@@ -39,6 +40,7 @@ export const Reviewer: React.FC<ReviewerProps> = ({
   onSelectCompression,
   targetSearchTopic = '',
 }) => {
+  const record = useMemo(() => cleanRecord(rawRecord), [rawRecord]);
   const [searchQuery, setSearchQuery] = useState(targetSearchTopic);
   const [searchCursor, setSearchCursor] = useState(0);
   const [copied, setCopied] = useState(false);

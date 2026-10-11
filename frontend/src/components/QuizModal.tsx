@@ -1,7 +1,8 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { X, ChevronRight, ChevronLeft, Check } from 'lucide-react';
 import type { QuizQuestion } from '../types/reviewer';
 import { QuizResults } from './QuizResults';
+import { cleanQuiz } from '../contentFilter';
 
 interface QuizModalProps {
   isOpen: boolean;
@@ -11,9 +12,10 @@ interface QuizModalProps {
   returnFocusRef?: React.RefObject<HTMLElement | null>;
 }
 
-export const QuizModal: React.FC<QuizModalProps> = (props) => (
-  props.isOpen && props.questions.length > 0 ? <QuizAttempt {...props} /> : null
-);
+export const QuizModal: React.FC<QuizModalProps> = (props) => {
+  const questions = useMemo(() => cleanQuiz(props.questions), [props.questions]);
+  return props.isOpen && questions.length > 0 ? <QuizAttempt {...props} questions={questions} /> : null;
+};
 
 const QuizAttempt: React.FC<QuizModalProps> = ({
   isOpen,
