@@ -1,0 +1,23 @@
+{
+  "label": "(?:lesson|lecture|module|chapter)\\s*[:#.-]?\\s*0*\\d+[A-Za-z]?\\b",
+  "course": "(?:computer\\s+science|information\\s+technology|CS|CSE|IT|ICT|BSCS|MATH|BIO|CHEM|PHYS|ENG|ENGR|HIST|ECON|PSYCH)\\s*[-:]?\\s*\\d{2,4}[A-Za-z]?\\b",
+  "institution": "\\b(?:university|college|department|school)\\b",
+  "academic": "\\b(?:is|are|was|were|has|have|had|founded|established|studied|studies|research|researchers|developed|discovered|attended|teach|teaches|means|refers|requires|must|should|never|not|can|cannot|uses|use|store|stores|contains|includes|when|because|where|which|that|than)\\b",
+  "advice": "^(?:memorize\\s+this|review\\s+before\\s+(?:the|your)\\s+exam|focus\\s+on\\s+this\\s+topic|use\\s+flashcards|ask\\s+your\\s+instructor|good\\s+luck(?:\\s+on\\s+your\\s+exam)?|you've\\s+got\\s+this)[.!]*$",
+  "administrative": "^(?:page\\s+\\d+(?:\\s+of\\s+\\d+)?|copyright\\b.*|©.*|(?:instructor|professor|prepared\\s+by|submitted\\s+by|contact|email|course\\s+code)\\s*:.*)$",
+  "protected": ["sources", "source_flags", "id", "type", "importance", "starred", "step_number", "question_type"],
+  "required": {
+    "keywords": ["term", "definition"],
+    "core_concepts": ["concept"],
+    "must_remember": ["text"],
+    "compare": ["concept_a", "concept_b", "aspects"],
+    "aspects": ["aspect", "a_val", "b_val"],
+    "process_steps": ["process_title", "steps"],
+    "steps": [],
+    "formulas_rules": ["name", "formula"],
+    "variables": ["symbol", "meaning"],
+    "examples": ["concept", "example"],
+    "possible_quiz_points": ["question_clue", "key_fact"]
+  },
+  "content_any": {"core_concepts": ["explanation", "points"], "steps": ["title", "description"]}
+}

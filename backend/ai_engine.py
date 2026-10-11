@@ -5,6 +5,7 @@ import logging
 import base64
 from typing import Dict, Any, List, Optional, Tuple
 from dotenv import load_dotenv
+from content_filter import clean_tree, clean_quiz_item, clean_source_for_generation
 
 logger = logging.getLogger(__name__)
 load_dotenv()
@@ -367,6 +368,8 @@ def _normalize_sources(value: Any) -> List[Dict[str, Any]]:
 
 
 def _with_sources(entry: Dict[str, Any], raw: Dict[str, Any]) -> Dict[str, Any]:
+    if isinstance(raw.get('id'), (str, int)) and not isinstance(raw.get('id'), bool):
+        entry['id'] = raw['id']
     sources = _normalize_sources(raw.get("sources"))
     if sources:
         entry["sources"] = sources
@@ -614,6 +617,7 @@ def normalize_reviewer(data: Any) -> Dict[str, Any]:
     """
     if not isinstance(data, dict):
         data = {}
+    data = clean_tree(data)
 
     reviewer: Dict[str, Any] = {
         "subject": _safe_str(data.get("subject"), default="General Study", max_len=120) or "General Study",
@@ -634,7 +638,7 @@ def normalize_reviewer(data: Any) -> Dict[str, Any]:
     if source_flags:
         reviewer["source_flags"] = source_flags
 
-    return reviewer
+    return clean_tree(reviewer)
 
 
 def normalize_quiz(questions: Any, question_count: int = 20) -> List[Dict[str, Any]]:
@@ -644,10 +648,14 @@ def normalize_quiz(questions: Any, question_count: int = 20) -> List[Dict[str, A
     valid_types = {"multiple_choice", "true_false", "identification"}
     out: List[Dict[str, Any]] = []
     seen_questions = set()
+    seen_ids = set()
     for item in questions:
         if len(out) >= max(1, int(question_count)):
             break
         if not isinstance(item, dict):
+            continue
+        item = clean_quiz_item(item)
+        if item is None:
             continue
         qtype = item.get("type")
         if qtype not in valid_types:
@@ -671,23 +679,32 @@ def normalize_quiz(questions: Any, question_count: int = 20) -> List[Dict[str, A
         if qtype == "multiple_choice":
             if len(options) < 2 or answer not in options:
                 continue
-            options = options[:6]
+            if len(options) > 6:
+                continue
         elif qtype == "true_false":
-            answer = "True" if answer.strip().lower().startswith("t") else "False"
+            answer = "True" if answer.strip().lower() == "true" else "False"
             options = ["True", "False"]
         else:
             options = []
 
+        question_id = item.get('id')
+        if isinstance(question_id, bool) or not isinstance(question_id, int):
+            question_id = len(out) + 1
+            while question_id in seen_ids:
+                question_id += 1
+        if question_id in seen_ids:
+            continue
+        seen_ids.add(question_id)
         seen_questions.add(key)
-        out.append({
-            "id": len(out) + 1,
+        out.append(_with_sources({
+            "id": question_id,
             "type": qtype,
             "question": question,
             "options": options,
             "correct_answer": answer,
             "explanation": _safe_str(item.get("explanation"), max_len=800),
             "topic": _safe_str(item.get("topic"), max_len=150) or "General",
-        })
+        }, item))
     return out
 
 
@@ -767,6 +784,7 @@ def generate_reviewer_gemini(
 
     client = genai.Client(api_key=resolved_key)
 
+    text = clean_source_for_generation(text)
     compression = compression if compression in {"quick", "standard", "detailed"} else "standard"
     tone = tone if tone in {"standard", "simpler", "eli5"} else "standard"
 
@@ -824,6 +842,7 @@ def generate_quiz_gemini(
 
     client = genai.Client(api_key=resolved_key)
 
+    reviewer_data = normalize_reviewer(reviewer_data)
     prompt = f"""Generate at most {question_count} practice quiz questions based ONLY on the study reviewer below.
 
 HARD RULES:
@@ -1516,6 +1535,7 @@ def local_fallback_synthesizer(
     compression = compression if compression in {"quick", "standard", "detailed"} else "standard"
     # `tone` is intentionally unused: rewriting text is not extraction.
 
+    text = clean_source_for_generation(text)
     lines = _source_lines(text)
     title = _extract_title(lines, filename)
     subject = _detect_subject(text)

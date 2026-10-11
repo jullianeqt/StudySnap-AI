@@ -1,0 +1,29 @@
+{
+  "id": "fixture-101",
+  "title": "ABC University — Lesson 1: Algorithms",
+  "subject": "Computer Science 101: Data Structures",
+  "filename": "ABC University — Lesson 1.pdf",
+  "date_created": "Oct 12, 2026",
+  "pages_processed": 1,
+  "segments": [{"source_type": "pdf_page", "source_index": 1, "label": "Page 1", "text": "ABC University\nLESSON 01\nCS 101\nAlgorithms\nAn algorithm is an ordered sequence of steps."}],
+  "reviewer": {
+    "lesson_title": "ABC University — Lesson 1: Algorithms",
+    "subject": "Computer Science 101: Data Structures",
+    "quick_review": ["ABC University", "Lecture #101", "An algorithm is an ordered sequence of steps. ABC University. Lesson: 1. It must terminate.", "Review before the exam."],
+    "keywords": [{"term": "CS 101: Algorithm", "definition": "Lesson 1: An algorithm is an ordered sequence of steps.", "sources": [{"type": "page", "index": 1, "label": "Page 1"}]}, {"term": "University", "definition": "Lecture 101"}],
+    "core_concepts": [{"concept": "LESSON 01: Termination", "explanation": "ABC University — Algorithms must terminate.", "points": ["Lesson 1", "The steps must be finite."], "sources": [{"type": "page", "index": 1}]}, {"concept": "University", "explanation": "", "points": []}],
+    "must_remember": [{"text": "Lecture 101"}, {"text": "Algorithms must terminate.", "sources": [{"type": "page", "index": 1}]}],
+    "compare": [{"concept_a": "Lesson 1: Stack", "concept_b": "CS101: Queue", "aspects": [{"aspect": "Lecture 101: Order", "a_val": "Last in, first out.", "b_val": "First in, first out."}, {"aspect": "University", "a_val": "University", "b_val": "University"}]}],
+    "process_steps": [{"process_title": "Lesson 1: Search", "steps": [{"step_number": 1, "title": "Compare", "description": "Compare the target with the current item."}, {"step_number": 2, "title": "Lecture 101", "description": "ABC University"}]}],
+    "formulas_rules": [{"name": "CS 101: Work", "formula": "W = F × d", "variables": [{"symbol": "F", "meaning": "Force"}, {"symbol": "Lesson 1", "meaning": "University"}], "when_to_use": "Use when force is parallel to displacement.", "example": "W = 10 × 2 = 20 J"}],
+    "examples": [{"concept": "Lesson 1: Stack", "example": "A stack of plates uses last in, first out order.", "explanation": "ABC University — The last plate added is removed first."}],
+    "possible_quiz_points": [{"question_clue": "Lesson 1: Which structure is LIFO?", "key_fact": "Stack", "question_type": "identification"}],
+    "one_minute_review": "CS 101: Algorithms must terminate. ABC University. Lecture 101. Stacks use LIFO."
+  },
+  "quiz": [
+    {"id": 21, "type": "multiple_choice", "question": "Which structure is LIFO?", "options": ["Lesson 1: Stack", "CS 101: Queue"], "correct_answer": "Lesson 1: Stack", "explanation": "ABC University — Stacks use last in, first out order.", "topic": "CS101: Data Structures"},
+    {"id": 22, "type": "identification", "question": "Name the university.", "correct_answer": "ABC University", "explanation": "University", "topic": "Lesson 1"},
+    {"id": 23, "type": "multiple_choice", "question": "Choose the structure.", "options": ["Stack", "Lesson 1: Stack"], "correct_answer": "Stack", "explanation": "", "topic": "Structures"},
+    {"id": 24, "type": "true_false", "question": "Algorithms must terminate.", "correct_answer": "True", "explanation": "Lecture 101: Algorithms must terminate.", "topic": "Algorithms"}
+  ]
+}

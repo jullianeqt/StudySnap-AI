@@ -21,6 +21,7 @@ from reportlab.platypus import (
     TableStyle,
 )
 from extractors import process_file_input, extract_from_text
+from content_filter import clean_record
 from ai_engine import (
     generate_reviewer_gemini,
     generate_quiz_gemini,
@@ -195,6 +196,7 @@ def build_reviewer_pdf(record):
 
     Empty sections are skipped and numbering stays sequential.
     """
+    record = clean_record(record)
     data = normalize_reviewer(record.get("reviewer", record))
     title = data.get("lesson_title") or record.get("title") or "Study Reviewer"
     subject = data.get("subject") or record.get("subject") or "Academic Study Reviewer"
@@ -379,6 +381,7 @@ def export_pdf():
 
     try:
         pdf_buffer = build_reviewer_pdf(record)
+        record = clean_record(record)
         title = record.get("reviewer", {}).get("lesson_title") or record.get("title") or "study-reviewer"
         safe_title = "".join(char if char.isalnum() or char in " -_" else "_" for char in title).strip() or "study-reviewer"
         return send_file(
@@ -602,7 +605,7 @@ def generate_reviewer():
 def generate_quiz():
     """Generate quiz questions grounded in reviewer data."""
     data = request.get_json() or {}
-    reviewer_data = data.get("reviewer", {})
+    reviewer_data = normalize_reviewer(data.get("reviewer", {}))
     try:
         question_count = max(1, min(20, int(data.get("question_count", 10))))
     except (TypeError, ValueError):
@@ -704,7 +707,7 @@ def transform_reviewer():
     return jsonify({
         "success": True,
         "action": action,
-        "reviewer": transformed,
+        "reviewer": normalize_reviewer(transformed),
         "provider": provider,
         "note": note
     })
@@ -716,7 +719,7 @@ def history_endpoint():
         return jsonify({"success": True, "message": "History cleared"})
 
     history = load_history()
-    return jsonify({"success": True, "history": history})
+    return jsonify({"success": True, "history": [clean_record(record) for record in history]})
 
 
 @app.route("/api/history/<reviewer_id>", methods=["DELETE"])

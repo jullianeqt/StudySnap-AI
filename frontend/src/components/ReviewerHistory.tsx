@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import type { ReviewerRecord } from '../types/reviewer';
 import { providerLabel } from '../source';
+import { cleanRecord, cleanText } from '../contentFilter';
 
 interface ReviewerHistoryProps {
   history: ReviewerRecord[];
@@ -18,13 +19,14 @@ interface ReviewerHistoryProps {
 type SortOrder = 'newest' | 'oldest';
 
 export const ReviewerHistory: React.FC<ReviewerHistoryProps> = ({
-  history,
+  history: rawHistory,
   onSelectReviewer,
   onClearHistory,
   onDeleteReviewer,
   isOpen,
   onClose,
 }) => {
+  const history = useMemo(() => rawHistory.map(cleanRecord), [rawHistory]);
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<SortOrder>('newest');
   const [subjectFilter, setSubjectFilter] = useState<string>('all');
@@ -50,7 +52,7 @@ export const ReviewerHistory: React.FC<ReviewerHistoryProps> = ({
     const filtered = history.filter((item) => {
       if (subjectFilter !== 'all' && (item.subject || '').trim() !== subjectFilter) return false;
       if (!needle) return true;
-      return [item.title, item.subject, item.filename].some((value) =>
+      return [item.title, item.subject, cleanText(item.filename.replace(/\.[^.]+$/, ''))].some((value) =>
         (value || '').toLowerCase().includes(needle),
       );
     });
@@ -229,7 +231,7 @@ export const ReviewerHistory: React.FC<ReviewerHistoryProps> = ({
                     {item.filename && (
                       <li className="flex items-center space-x-1.5 min-w-0">
                         <FileText className="w-3 h-3 shrink-0" />
-                        <span className="truncate" title={item.filename}>{item.filename}</span>
+                        <span className="truncate">{cleanText(item.filename.replace(/\.[^.]+$/, '')) || 'Source document'}</span>
                       </li>
                     )}
                     <li className="flex items-center space-x-1.5">

@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import type { ReviewerRecord } from '../types/reviewer';
 import { buildStudyCards, type StudyCard } from '../studyCards';
+import { cleanRecord } from '../contentFilter';
 
 type Grade = 'know' | 'review';
 
@@ -30,7 +31,8 @@ const kbdClass = 'px-1.5 py-0.5 rounded border border-border bg-sunken font-mono
  * Fullscreen active-recall session built from the reviewer already on screen.
  * No AI calls, no persistence: session progress lives in React state only.
  */
-export const StudyMode: React.FC<StudyModeProps> = ({ record, onClose }) => {
+export const StudyMode: React.FC<StudyModeProps> = ({ record: rawRecord, onClose }) => {
+  const record = useMemo(() => cleanRecord(rawRecord), [rawRecord]);
   const cards = useMemo(() => buildStudyCards(record.reviewer), [record.reviewer]);
   const cardById = useMemo(() => new Map(cards.map((card) => [card.id, card])), [cards]);
 

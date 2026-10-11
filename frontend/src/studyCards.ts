@@ -4,6 +4,7 @@
  */
 
 import type { ReviewerData, MustRememberItem } from './types/reviewer';
+import { cleanReviewer } from './contentFilter';
 
 export type StudyCardKind = 'keyword' | 'must_remember' | 'concept' | 'formula' | 'process';
 
@@ -48,7 +49,7 @@ export const mustRememberCue = (text: string): string => {
 
 /** Cards in study order: keywords, must-remember, concepts, formulas, processes. */
 export const buildStudyCards = (data?: ReviewerData | null): StudyCard[] => {
-  const source: Partial<ReviewerData> = data || {};
+  const source: Partial<ReviewerData> = data ? cleanReviewer(data) : {};
   const cards: StudyCard[] = [];
 
   (source.keywords || []).forEach((keyword, i) => {
