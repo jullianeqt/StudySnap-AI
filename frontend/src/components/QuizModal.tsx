@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { X, ChevronRight, ChevronLeft, Check } from 'lucide-react';
 import type { QuizQuestion } from '../types/reviewer';
 import { QuizResults } from './QuizResults';
@@ -8,26 +8,80 @@ interface QuizModalProps {
   onClose: () => void;
   questions: QuizQuestion[];
   onScrollToTopic: (topic: string) => void;
+  returnFocusRef?: React.RefObject<HTMLElement | null>;
 }
 
-export const QuizModal: React.FC<QuizModalProps> = ({
+export const QuizModal: React.FC<QuizModalProps> = (props) => (
+  props.isOpen && props.questions.length > 0 ? <QuizAttempt {...props} /> : null
+);
+
+const QuizAttempt: React.FC<QuizModalProps> = ({
   isOpen,
   onClose,
   questions,
   onScrollToTopic,
+  returnFocusRef,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
   const [isFinished, setIsFinished] = useState(false);
+  const [confirmExit, setConfirmExit] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const exitRef = useRef<HTMLButtonElement>(null);
+  const continueRef = useRef<HTMLButtonElement>(null);
+
+  const handleExit = useCallback(() => {
+    setUserAnswers({});
+    setCurrentIndex(0);
+    setIsFinished(false);
+    setConfirmExit(false);
+    onClose();
+  }, [onClose]);
+
+  const requestExit = useCallback(() => {
+    if (!isFinished && Object.values(userAnswers).some(answer => answer.trim())) {
+      setConfirmExit(true);
+    } else {
+      handleExit();
+    }
+  }, [isFinished, userAnswers, handleExit]);
+
+  useEffect(() => {
+    const opener = returnFocusRef?.current ?? document.activeElement;
+    return () => {
+      if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
+    };
+  }, [returnFocusRef]);
+
+  useEffect(() => {
+    if (isOpen) (confirmExit ? continueRef : exitRef).current?.focus();
+  }, [isOpen, confirmExit]);
 
   useEffect(() => {
     if (!isOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        if (confirmExit) setConfirmExit(false);
+        else requestExit();
+      }
+      if (event.key === 'Tab') {
+        const controls = dialogRef.current?.querySelectorAll<HTMLElement>(
+          'button:not(:disabled), input:not(:disabled), [tabindex="0"]',
+        );
+        if (!controls?.length) return;
+        const first = controls[0];
+        const last = controls[controls.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault(); last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault(); first.focus();
+        }
+      }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, confirmExit, requestExit]);
 
   if (!isOpen || questions.length === 0) return null;
 
@@ -62,23 +116,43 @@ export const QuizModal: React.FC<QuizModalProps> = ({
   };
 
   const handleBackToReviewer = (topic?: string) => {
-    onClose();
+    handleExit();
     if (topic) {
       onScrollToTopic(topic);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6">
+    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
       <div
-        role="dialog"
+        ref={dialogRef}
+        role={confirmExit ? 'alertdialog' : 'dialog'}
         aria-modal="true"
-        aria-labelledby="quiz-dialog-title"
-        className="bg-sunken rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-border relative my-8"
+        aria-labelledby={confirmExit ? 'quiz-exit-title' : 'quiz-dialog-title'}
+        aria-describedby={confirmExit ? 'quiz-exit-description' : undefined}
+        className="bg-sunken rounded-3xl max-w-2xl w-full max-h-[calc(100dvh-3rem)] flex flex-col shadow-2xl border border-border overflow-hidden"
       >
+        {confirmExit ? (
+          <div className="p-6">
+            <h2 id="quiz-exit-title" className="text-lg font-bold text-ink">Exit this quiz?</h2>
+            <p id="quiz-exit-description" className="mt-3 text-sm text-ink-soft">
+              Your unfinished answers will be discarded. No score will be submitted.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button ref={continueRef} type="button" onClick={() => setConfirmExit(false)}
+                className="px-4 py-3 rounded-xl bg-accent text-white font-semibold focus-visible:outline-2 focus-visible:outline-accent">
+                Continue Quiz
+              </button>
+              <button type="button" onClick={handleExit}
+                className="px-4 py-3 rounded-xl border border-border bg-surface text-ink font-semibold focus-visible:outline-2 focus-visible:outline-accent">
+                Exit Quiz
+              </button>
+            </div>
+          </div>
+        ) : <>
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-border">
-          <div className="flex items-center space-x-2">
+        <div className="flex shrink-0 items-center justify-between gap-3 p-4 sm:p-6 border-b border-border bg-sunken">
+          <div className="flex flex-wrap items-center gap-2 min-w-0">
             <span id="quiz-dialog-title" className="px-2.5 py-1 text-xs font-bold rounded-lg bg-accent-soft text-accent-ink">
               Exam Practice Quiz
             </span>
@@ -88,15 +162,18 @@ export const QuizModal: React.FC<QuizModalProps> = ({
           </div>
 
           <button
-            onClick={onClose}
-            aria-label="Close quiz"
-            className="p-1.5 text-ink-muted hover:text-ink-soft rounded-lg hover:bg-border/60 transition-colors"
+            ref={exitRef}
+            type="button"
+            onClick={requestExit}
+            className="shrink-0 min-h-11 px-3 py-2 text-ink border border-border-strong rounded-xl bg-surface hover:bg-border/60 transition-colors inline-flex items-center gap-2 font-semibold text-sm focus-visible:outline-2 focus-visible:outline-accent"
           >
-            <X className="w-5 h-5" />
+            <X aria-hidden="true" className="w-5 h-5" />
+            <span>Exit Quiz</span>
           </button>
         </div>
 
         {/* Quiz Body or Results */}
+        <div className="overflow-y-auto min-h-0 p-4 sm:p-6">
         {!isFinished ? (
           <div className="mt-6 space-y-6">
             {/* Progress Bar */}
@@ -215,6 +292,8 @@ export const QuizModal: React.FC<QuizModalProps> = ({
             onBackToReviewer={handleBackToReviewer}
           />
         )}
+        </div>
+        </>}
       </div>
     </div>
   );
