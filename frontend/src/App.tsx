@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Sparkles, History, Key, FileText, Upload, Sliders, Shield, Zap, AlertCircle
 } from 'lucide-react';
@@ -36,6 +36,7 @@ export function App() {
   // Modals & Panels
   const [isQuizGenOpen, setIsQuizGenOpen] = useState<boolean>(false);
   const [isQuizModalOpen, setIsQuizModalOpen] = useState<boolean>(false);
+  const quizOpenerRef = useRef<HTMLElement | null>(null);
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
   const [isGeneratingQuiz, setIsGeneratingQuiz] = useState<boolean>(false);
   
@@ -512,7 +513,10 @@ export function App() {
           <Reviewer
             key={currentReviewer.id}
             record={currentReviewer}
-            onOpenQuizGenerator={() => setIsQuizGenOpen(true)}
+            onOpenQuizGenerator={(event) => {
+              quizOpenerRef.current = event.currentTarget;
+              setIsQuizGenOpen(true);
+            }}
             onTransform={handleTransform}
             onExportPdf={handleExportPdf}
             onSelectCompression={(newLevel) => {
@@ -549,6 +553,7 @@ export function App() {
 
       {/* Quiz Interactive Test Modal */}
       <QuizModal
+        returnFocusRef={quizOpenerRef}
         isOpen={isQuizModalOpen}
         onClose={() => setIsQuizModalOpen(false)}
         questions={quizQuestions}

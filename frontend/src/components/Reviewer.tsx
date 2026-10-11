@@ -22,7 +22,7 @@ import { StudyMode } from './StudyMode';
 
 interface ReviewerProps {
   record: ReviewerRecord;
-  onOpenQuizGenerator: () => void;
+  onOpenQuizGenerator: (event: React.MouseEvent<HTMLButtonElement>) => void;
   onTransform: (action: 'make_simpler' | 'eli5' | 'make_shorter' | 'make_detailed') => void;
   onExportPdf: () => Promise<void>;
   isTransforming?: boolean;
